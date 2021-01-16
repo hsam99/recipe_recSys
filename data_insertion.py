@@ -1,7 +1,9 @@
 import pymysql
 import pandas as pd
 import json
+import time
 
+start_time = time.time()
 # Connect to the database
 connection = pymysql.connect(host='localhost',
                              user='sam',
@@ -11,7 +13,7 @@ connection = pymysql.connect(host='localhost',
 # create cursor
 cursor=connection.cursor()
 
-with open('./tfidf_with_embedding_data.json', 'r') as f:
+with open('./weighted_ingr_embedding_data.json', 'r') as f:
     data = json.load(f)
 
 data_df = pd.DataFrame(data)
@@ -43,9 +45,10 @@ for i,row in data_df.iterrows():
 #     connection.commit()
 
 connection.close()
-
+elapsed_time = time.time() - start_time
+print('Elapsed_time: {}'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
 # import the module
-from sqlalchemy import create_engine
+# from sqlalchemy import create_engine
 
 # # create sqlalchemy engine
 # engine = create_engine("mysql+pymysql://{user}:{pw}@localhost/{db}"

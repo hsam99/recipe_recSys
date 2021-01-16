@@ -17,6 +17,8 @@ class RecipeDetails(models.Model):
     images = models.TextField(blank=True, null=True)
     id = models.TextField(blank=True, null=True)
     instructions = models.TextField(blank=True, null=True)
+    # likes = models.ManyToManyField(User)
+    # saved = models.ManyToManyField(User)
 
     class Meta:
         managed = True
@@ -28,7 +30,7 @@ class RecipeEmbeddings(models.Model):
     cleaned_title = models.TextField(blank=True, null=True)
     cleaned_ingrs = models.TextField(blank=True, null=True)
     title_vec = models.TextField(blank=True, null=True)
-    ingr_vec = models.TextField(blank=True, null=True)
+    weighted_ingr_vec = models.TextField(blank=True, null=True)
     id = models.TextField(blank=True, null=True)
     tfidf_weight = models.TextField(blank=True, null=True)
 

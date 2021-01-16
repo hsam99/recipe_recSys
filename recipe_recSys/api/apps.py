@@ -5,7 +5,7 @@ from gensim.models import Word2Vec
 
 
 class RecipeSearchConfig(AppConfig):
-    name = 'recipe_search'
+    name = 'api'
 
     # create path to models
     title_word2vec_path = os.path.join(settings.WORD2VEC_MODEL, 'title_word2vec_model.bin')
