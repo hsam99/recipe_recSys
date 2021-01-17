@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 import ast
@@ -12,8 +11,7 @@ from .models import (RecipeDetails, RecipeEmbeddings)
 from .serializers import (RecipeSearchSerializer, RecipeDetailsSerializer)
 
 import time
-from rest_framework import generics
-
+from rest_framework import generics, status
 
 class RecipeView(generics.ListAPIView):
     queryset = RecipeDetails.objects.all()
@@ -23,15 +21,15 @@ class RecipeView(generics.ListAPIView):
 def recipe_query(request):
     search_serializer = RecipeSearchSerializer(data=request.data)
     if search_serializer.is_valid(raise_exception=True):
-        data = search_serializer.validated_data
-        query = data.get('query')
-    
+        query = search_serializer.data.get('query')
+    else:
+        return Response('Invalid query')
     query_vec = vectorize_query(query)
     top_n_recipes = compute_similarity(query_vec)
 
     recipe_objects = RecipeDetails.objects.filter(id__in=top_n_recipes)
     recipe_det_serializer = RecipeDetailsSerializer(recipe_objects, many=True)
-    return Response(recipe_det_serializer.data)
+    return Response(recipe_det_serializer.data, status=status.HTTP_200_OK)
 
 
 def vectorize_query(query):
