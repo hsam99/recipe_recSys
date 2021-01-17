@@ -31,6 +31,10 @@ const useStyles = makeStyles((theme) => ({
     },
     title: {
         flexGrow: 0.5,
+        display: 'none',
+        [theme.breakpoints.up('sm')]: {
+          display: 'block',
+        },
     },
     searchBar: {
         position: 'relative',
