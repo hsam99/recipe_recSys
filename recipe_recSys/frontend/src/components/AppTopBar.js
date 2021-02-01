@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import AppBar from '@material-ui/core/AppBar';
 import ToolBar from '@material-ui/core/ToolBar';
 import Typography from '@material-ui/core/Typography';
@@ -36,8 +36,13 @@ const useStyles = makeStyles((theme) => ({
           display: 'block',
         },
     },
+    form: {
+        flexGrow: 5,
+    },
     searchBar: {
         position: 'relative',
+        display: 'flex',
+        flexGrow: 5,
         borderRadius: theme.shape.borderRadius,
         backgroundColor: fade(theme.palette.common.white, 0.15),
         '&:hover': {
@@ -48,10 +53,8 @@ const useStyles = makeStyles((theme) => ({
         width: 'auto',
         [theme.breakpoints.up('xs')]: {
           marginLeft: theme.spacing(2),
-
           width: 'auto',
         },
-        flexGrow: 5,
     },
     searchIcon: {
         padding: theme.spacing(0, 2),
@@ -72,13 +75,14 @@ const useStyles = makeStyles((theme) => ({
         transition: theme.transitions.create('width'),
         width: '100%',
         [theme.breakpoints.up('md')]: {
-          width: 'auto',
+          width: '100%',
         },
       },
   }));
 
 
-const AppTopBar = () => {
+const AppTopBar = ({ query, handleQueryChange, handleSubmit }) => {
+
     const classes = useStyles();
 
     return (
@@ -86,16 +90,20 @@ const AppTopBar = () => {
             <AppBar position="sticky" className={classes.appBar}>
                 <ToolBar>
                     <Typography variant="h6" className={classes.title}>HealthyEats</Typography>
-                    <FormControl className={classes.searchBar}>
-                        <div className={classes.searchIcon}>
-                            <SearchIcon />
-                        </div>
-                        <InputBase placeholder="Search…" inputProps={{ 'aria-label': 'search' }}
-                            classes={{
-                                root: classes.inputRoot,
-                                input: classes.inputInput}}
-                            />
-                    </FormControl>
+                    <form className={classes.form} onSubmit={(e) => {handleSubmit(e)}}>
+                        <FormControl className={classes.searchBar}>
+                            <div className={classes.searchIcon}>
+                                <SearchIcon />
+                            </div>
+                            <InputBase placeholder="Search…" inputProps={{ 'aria-label': 'search' }}
+                                classes={{
+                                    root: classes.inputRoot,
+                                    input: classes.inputInput}}
+                                value={query}
+                                onChange={(e) => handleQueryChange(e)}
+                                />
+                        </FormControl>
+                    </form>
                     <div className={classes.rightEnd}>
                         <Tooltip title='Account' arrow>
                             <IconButton color="inherit">

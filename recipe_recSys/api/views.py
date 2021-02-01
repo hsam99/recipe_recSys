@@ -52,7 +52,7 @@ def vectorize_query(query):
 
 def compute_similarity(query_vec):
     n = 20
-    recipes = RecipeEmbeddings.objects.values_list('id', 'title_vec').order_by('?')[:50000]
+    recipes = RecipeEmbeddings.objects.values_list('id', 'title_vec').order_by('?')[:100]
     similarity_list = []
     start_time = time.time()
     for id, title_vec in recipes:

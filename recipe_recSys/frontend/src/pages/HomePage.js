@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import axios from 'axios';
 import RecipeDetailPage from "./RecipeDetailPage";
 import AppTopBar from "../components/AppTopBar";
 import { BrowserRouter as Router, Switch, Route, Link, Redirect } from "react-router-dom"
@@ -29,10 +30,31 @@ const useStyles = makeStyles((theme) => ({
   }));
 
 const HomePage = () => {
+    const [loading, setLoading] = useState(false);
+    const [query, setQuery] = useState('');
+
+    const handleQueryChange = (e) => {
+      setQuery(e.target.value);
+    }
+    
+    const handleSubmit = (e) => {
+      e.preventDefault();
+      window.alert(query);
+      // setLoading(true);
+      axios.post('/api/search/', {
+          query: query,
+        })
+        .then((response) => {
+          console.log('done');
+          console.log(response);
+        }, (error) => {
+          console.log(error);
+        });
+    };
     
     return (
         <div>
-            <AppTopBar />
+            <AppTopBar query={query} handleQueryChange={handleQueryChange} handleSubmit={handleSubmit} />
             <RecipeList />
             <RecipeList />
             <RecipeList />
