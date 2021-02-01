@@ -8,14 +8,14 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .apps import RecipeSearchConfig
 from .models import (RecipeDetails, RecipeEmbeddings)
-from .serializers import (RecipeSearchSerializer, RecipeDetailsSerializer)
+from .serializers import (RecipeSearchSerializer, RecipeDisplaySerializer)
 
 import time
 from rest_framework import generics, status
 
 class RecipeView(generics.ListAPIView):
     queryset = RecipeDetails.objects.all()
-    serializer_class = RecipeDetailsSerializer
+    serializer_class = RecipeDisplaySerializer
 
 @api_view(['POST'])
 def recipe_query(request):
@@ -28,7 +28,7 @@ def recipe_query(request):
     top_n_recipes = compute_similarity(query_vec)
 
     recipe_objects = RecipeDetails.objects.filter(id__in=top_n_recipes)
-    recipe_det_serializer = RecipeDetailsSerializer(recipe_objects, many=True)
+    recipe_det_serializer = RecipeDisplaySerializer(recipe_objects, many=True)
     return Response(recipe_det_serializer.data, status=status.HTTP_200_OK)
 
 
@@ -52,7 +52,7 @@ def vectorize_query(query):
 
 def compute_similarity(query_vec):
     n = 20
-    recipes = RecipeEmbeddings.objects.values_list('id', 'title_vec').order_by('?')[:100]
+    recipes = RecipeEmbeddings.objects.values_list('id', 'title_vec').order_by('?')[:50000]
     similarity_list = []
     start_time = time.time()
     for id, title_vec in recipes:

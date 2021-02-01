@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
-import axios from 'axios';
+import searchApi from "../hooks/useSearch";
 import RecipeDetailPage from "./RecipeDetailPage";
 import AppTopBar from "../components/AppTopBar";
 import { BrowserRouter as Router, Switch, Route, Link, Redirect } from "react-router-dom"
-import Button from "@material-ui/core/Button"
+import Container from "@material-ui/core/Container"
 import Typography from "@material-ui/core/Typography"
 import Box from "@material-ui/core/Box"
 import FormHelperText from "@material-ui/core/FormHelperText"
@@ -27,9 +27,18 @@ const useStyles = makeStyles((theme) => ({
       overflow: 'hidden',
       backgroundColor: theme.palette.background.paper,
     },
+    container: {
+      marginTop: 50,
+    },
+    tile: {
+      marginBottom: 20,
+    },
   }));
 
 const HomePage = () => {
+    const classes = useStyles();
+  
+    const [searchResult, makeSearch] = searchApi();
     const [loading, setLoading] = useState(false);
     const [query, setQuery] = useState('');
 
@@ -39,25 +48,36 @@ const HomePage = () => {
     
     const handleSubmit = (e) => {
       e.preventDefault();
-      window.alert(query);
+      makeSearch(query);
       // setLoading(true);
-      axios.post('/api/search/', {
-          query: query,
-        })
-        .then((response) => {
-          console.log('done');
-          console.log(response);
-        }, (error) => {
-          console.log(error);
-        });
+
     };
     
     return (
         <div>
             <AppTopBar query={query} handleQueryChange={handleQueryChange} handleSubmit={handleSubmit} />
-            <RecipeList />
-            <RecipeList />
-            <RecipeList />
+            <Container fixed className={classes.container}>
+              <GridList cellHeight={220} cols={4} spacing={10}>
+                {searchResult.map((tile) => (
+                  <GridListTile className={classes.tile} key={tile.images[0]['id']}>
+                    <img src={tile.images[0]['url']} alt={tile.title} />
+                    <GridListTileBar
+                            title={tile.title}
+                            classes={{
+                                root: classes.titleBar,
+                                title: classes.title,
+                            }}
+                            actionIcon={
+                                <IconButton aria-label={`star ${tile.title}`}>
+                                    <StarBorderIcon className={classes.title} />
+                                </IconButton>
+                            }
+                        />
+                  </GridListTile>
+                ))}
+              </GridList>
+            </Container>
+            {/* <RecipeList searchResult={searchResult} /> */}
         </div>
     )
 }

@@ -35,7 +35,7 @@ const useStyles = makeStyles((theme) => ({
     },
   }));
 
-const RecipeList = () => {
+const RecipeList = ({ searchResult }) => {
     const classes = useStyles();
     const tileData = [
         {title: 'Crunchy Potato Onion Bake', img: 'http://img.sndimg.com/food/image/upload/w_512,h_512,c_fit,fl_progressive,q_95/v1/img/recipes/47/91/49/picX9CNE2.jpg'},
@@ -50,9 +50,9 @@ const RecipeList = () => {
             <Typography variant="h6" className={classes.header}>Recipes similar to <a href='/'>LINK</a></Typography>
             <div className={classes.root}>
                 <GridList className={classes.gridList} cols={5} cellHeight={200} spacing={10}>
-                    {tileData.map((tile) => (
-                        <GridListTile key={tile.img}>
-                            <img src={tile.img} alt={tile.title} />
+                    {searchResult.map((tile) => (
+                        <GridListTile key={tile.images[0]['id']}>
+                            <img src={tile.images[0]['url']} alt={tile.title} />
                         <GridListTileBar
                             title={tile.title}
                             classes={{
