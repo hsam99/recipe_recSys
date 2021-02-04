@@ -20,6 +20,8 @@ import ListSubheader from '@material-ui/core/ListSubheader';
 import { Divider } from "@material-ui/core";
 import StarBorderIcon from '@material-ui/icons/StarBorder';
 import IconButton from '@material-ui/core/IconButton';
+import axios from 'axios';
+
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -40,30 +42,46 @@ const useStyles = makeStyles((theme) => ({
     }
   }));
 
-const SearchResultComponent = (result) => {
+const SearchResultComponent = (query) => {
     const classes = useStyles();
-    const [loading, setLoading] = useState(false);
-    const searchResult = result;
+    const [loading, setLoading] = useState(true);
+    const [searchResult, setResult] = useState([]);
 
-    // if (searchResult.length == 0) {
-    //   return (
-    //     <div>
-    //       <AppTopBar />
-    //       <Container fixed>
-    //         <div className={classes.overlay}>
-    //           <LoadingOverlay
-    //             active={loading}
-    //             spinner
-    //             text='Loading your content...'
-    //             className={classes.overlay}
-    //             >
-    //           </LoadingOverlay>
-    //         </div>
-    //       </Container>
-    //     </div>
-    //   )
-    // }
-    // else {
+  useEffect(() => {
+    if (loading) {
+      axios.get(`/api/search/${query}/`)
+      .then((response) => {
+        setLoading(false)
+        setResult(response.data)
+      }, (error) => {
+        console.log(error);
+      });
+    }
+  }, [loading]);
+
+  useEffect(() => {
+    setLoading(true);
+  }, [query])
+
+    if (loading) {
+      return (
+        <div>
+          <AppTopBar />
+          <Container fixed>
+            <div className={classes.overlay}>
+              <LoadingOverlay
+                active={true}
+                spinner
+                text='Loading your content...'
+                className={classes.overlay}
+                >
+              </LoadingOverlay>
+            </div>
+          </Container>
+        </div>
+      )
+    }
+    else {
       return (
           <div>
               <AppTopBar />
@@ -92,14 +110,14 @@ const SearchResultComponent = (result) => {
               {/* <RecipeList searchResult={searchResult} /> */}
           </div>
       )
-    // }
+    }
 }
 
 const SearchResultPage = (props) => {
-  console.log(props.location.state)
+  
   return(
     <div>
-      {props.location.state ? SearchResultComponent(props.location.state.searchResult) : <p>fucking error</p>}
+      {props.match.params.q ? SearchResultComponent(props.match.params.q) : <p>fucking error</p>}
     </div>
   )
 }

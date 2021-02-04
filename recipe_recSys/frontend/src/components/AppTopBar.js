@@ -13,6 +13,7 @@ import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 import Tooltip from '@material-ui/core/Tooltip';
 import searchApi from "../hooks/useSearch";
 import { useHistory } from 'react-router-dom';
+import axios from 'axios';
 
 
 const useStyles = makeStyles((theme) => ({
@@ -86,7 +87,6 @@ const useStyles = makeStyles((theme) => ({
 const AppTopBar = () => {
 
     const classes = useStyles();
-    const [searchResult, makeSearch] = searchApi();
     const [query, setQuery] = useState('');
     const history = useHistory();
 
@@ -96,16 +96,8 @@ const AppTopBar = () => {
     
     const handleSubmit = (e) => {
       e.preventDefault();
-      makeSearch(query);
-    //   makeSearch(query);
-    //   setLoading(true);
+      history.push(`/search/${query}/`);
     };
-
-    useEffect(() => {
-        if (query.length > 1){
-            history.push('/search', { searchResult: searchResult });
-        }
-    }, [searchResult])
 
     return (
         <div className={classes.root}>

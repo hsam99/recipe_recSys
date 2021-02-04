@@ -83,7 +83,7 @@ const HomePage = () => {
               <Route path='/' exact>
               <AppTopBar />
               </Route>
-              <Route path='/search' component={SearchResultPage} />
+              <Route path='/search/:q' component={SearchResultPage} />
               <Route path='/detail' component={RecipeDetailPage} />
             </Switch>
               {/* <AppTopBar /> */}

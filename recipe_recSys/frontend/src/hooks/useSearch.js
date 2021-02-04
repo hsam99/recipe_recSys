@@ -1,16 +1,16 @@
 import { useState } from 'react';
 import axios from 'axios';
 
-const searchApi = () => {
+const searchApi = (setLoading) => {
     const [searchResult, setResult] = useState([]);
-    // const [errorMessage, setErrorMessage] = useState("");
 
     const makeSearch = (query) => {
-        window.alert(query)
+        window.alert('niama')
         axios.post('/api/search/', {
             query: query,
           })
           .then((response) => {
+            setLoading(false);
             setResult(response.data);
           }, (error) => {
             console.log(error);

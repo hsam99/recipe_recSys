@@ -17,15 +17,16 @@ class RecipeView(generics.ListAPIView):
     queryset = RecipeDetails.objects.all()
     serializer_class = RecipeDisplaySerializer
 
-@api_view(['POST'])
-def recipe_query(request):
+@api_view(['GET'])
+def recipe_query(request, q):
     print('incoming...')
-    search_serializer = RecipeSearchSerializer(data=request.data)
-    if search_serializer.is_valid(raise_exception=True):
-        query = search_serializer.data.get('query')
-    else:
-        return Response('Invalid query')
-    query_vec = vectorize_query(query)
+    # search_serializer = RecipeSearchSerializer(data=request.data)
+    # if search_serializer.is_valid(raise_exception=True):
+    #     query = search_serializer.data.get('query')
+    # else:
+    #     return Response('Invalid query')
+    print(q)
+    query_vec = vectorize_query(q)
     top_n_recipes = compute_similarity(query_vec)
 
     recipe_objects = RecipeDetails.objects.filter(index__in=top_n_recipes)
