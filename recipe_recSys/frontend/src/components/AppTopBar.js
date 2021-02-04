@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AppBar from '@material-ui/core/AppBar';
 import ToolBar from '@material-ui/core/ToolBar';
 import Typography from '@material-ui/core/Typography';
@@ -11,6 +11,8 @@ import TurnedInIcon from '@material-ui/icons/TurnedIn';
 import AccountBoxIcon from '@material-ui/icons/AccountBox';
 import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 import Tooltip from '@material-ui/core/Tooltip';
+import searchApi from "../hooks/useSearch";
+import { useHistory } from 'react-router-dom';
 
 
 const useStyles = makeStyles((theme) => ({
@@ -81,16 +83,36 @@ const useStyles = makeStyles((theme) => ({
   }));
 
 
-const AppTopBar = ({ query, handleQueryChange, handleSubmit }) => {
+const AppTopBar = () => {
 
     const classes = useStyles();
+    const [searchResult, makeSearch] = searchApi();
+    const [query, setQuery] = useState('');
+    const history = useHistory();
+
+    const handleQueryChange = (e) => {
+      setQuery(e.target.value);
+    }
+    
+    const handleSubmit = (e) => {
+      e.preventDefault();
+      makeSearch(query);
+    //   makeSearch(query);
+    //   setLoading(true);
+    };
+
+    useEffect(() => {
+        if (query.length > 1){
+            history.push('/search', { searchResult: searchResult });
+        }
+    }, [searchResult])
 
     return (
         <div className={classes.root}>
             <AppBar position="sticky" className={classes.appBar}>
                 <ToolBar>
                     <Typography variant="h6" className={classes.title}>HealthyEats</Typography>
-                    <form className={classes.form} onSubmit={(e) => {handleSubmit(e)}}>
+                    <form className={classes.form} onSubmit={handleSubmit}>
                         <FormControl className={classes.searchBar}>
                             <div className={classes.searchIcon}>
                                 <SearchIcon />
@@ -100,7 +122,7 @@ const AppTopBar = ({ query, handleQueryChange, handleSubmit }) => {
                                     root: classes.inputRoot,
                                     input: classes.inputInput}}
                                 value={query}
-                                onChange={(e) => handleQueryChange(e)}
+                                onChange={handleQueryChange}
                                 />
                         </FormControl>
                     </form>

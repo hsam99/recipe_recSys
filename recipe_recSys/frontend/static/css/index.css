@@ -2,6 +2,7 @@ html, body {
     height: 100%;
     margin: 0;
     padding: 0;
+    background-color: white;
 }
 
 #main {
@@ -10,7 +11,6 @@ html, body {
     height: 100%;
     left: 0;
     top: 0;
-    background-color: whitesmoke;
 }
 
 #app {

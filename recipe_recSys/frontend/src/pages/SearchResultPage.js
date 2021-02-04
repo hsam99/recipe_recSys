@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import LoadingOverlay from 'react-loading-overlay';
-import SearchResultPage from "./SearchResultPage";
+import searchApi from "../hooks/useSearch";
 import RecipeDetailPage from "./RecipeDetailPage";
 import AppTopBar from "../components/AppTopBar";
 import { BrowserRouter as Router, Switch, Route, Link, Redirect } from "react-router-dom"
@@ -40,28 +40,15 @@ const useStyles = makeStyles((theme) => ({
     }
   }));
 
-const HomePage = () => {
+const SearchResultComponent = (result) => {
     const classes = useStyles();
-  
-    // const [searchResult, makeSearch] = searchApi();
-    // const [loading, setLoading] = useState(false);
-    // const [query, setQuery] = useState('');
-
-    // const handleQueryChange = (e) => {
-    //   setQuery(e.target.value);
-    // }
-    
-    // const handleSubmit = (e) => {
-    //   e.preventDefault();
-    //   makeSearch(query);
-    //   setLoading(true);
-
-    // };
+    const [loading, setLoading] = useState(false);
+    const searchResult = result;
 
     // if (searchResult.length == 0) {
     //   return (
     //     <div>
-    //       <AppTopBar query={query} handleQueryChange={handleQueryChange} handleSubmit={handleSubmit} />
+    //       <AppTopBar />
     //       <Container fixed>
     //         <div className={classes.overlay}>
     //           <LoadingOverlay
@@ -78,16 +65,9 @@ const HomePage = () => {
     // }
     // else {
       return (
-          <Router>
-            <Switch>
-              <Route path='/' exact>
+          <div>
               <AppTopBar />
-              </Route>
-              <Route path='/search' component={SearchResultPage} />
-              <Route path='/detail' component={RecipeDetailPage} />
-            </Switch>
-              {/* <AppTopBar /> */}
-              {/* <Container fixed className={classes.container}>
+              <Container fixed className={classes.container}>
                 <Typography variant='h4' className={classes.title}> {searchResult.length} Results</Typography>
                 <GridList cellHeight={220} cols={4} spacing={10}>
                   {searchResult.map((tile) => (
@@ -109,10 +89,19 @@ const HomePage = () => {
                   ))}
                 </GridList>
               </Container>
-              <RecipeList searchResult={searchResult} /> */}
-          </Router>
+              {/* <RecipeList searchResult={searchResult} /> */}
+          </div>
       )
-    }
-// }
+    // }
+}
 
-export default HomePage
+const SearchResultPage = (props) => {
+  console.log(props.location.state)
+  return(
+    <div>
+      {props.location.state ? SearchResultComponent(props.location.state.searchResult) : <p>fucking error</p>}
+    </div>
+  )
+}
+
+export default SearchResultPage

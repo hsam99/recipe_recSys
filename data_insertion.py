@@ -13,7 +13,7 @@ connection = pymysql.connect(host='localhost',
 # create cursor
 cursor=connection.cursor()
 
-with open('./weighted_ingr_embedding_data.json', 'r') as f:
+with open('./weighted_title_vec2.json', 'r') as f:
     data = json.load(f)
 
 data_df = pd.DataFrame(data)
@@ -24,8 +24,10 @@ cols = "`,`".join([str(i) for i in data_df.columns.tolist()])
 
 # Insert DataFrame recrds one by one.
 for i,row in data_df.iterrows():
-    sql = "INSERT INTO `recipe_embeddings` (`" +cols + "`) VALUES (" + "%s,"*(len(row)-1) + "%s)"
-    cursor.execute(sql, tuple(row))
+
+    sql = "UPDATE recipe_embeddings set weighted_title_vec='{}' where `index`={}".format(row['weighted_title_vec'], i+1)
+    # sql = "INSERT INTO `recipe_embeddings` (`" +cols + "`) VALUES (" + "%s,"*(len(row)-1) + "%s)"
+    cursor.execute(sql)
 
     # the connection is not autocommitted by default, so we must commit to save our changes
     connection.commit()

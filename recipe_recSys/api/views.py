@@ -19,6 +19,7 @@ class RecipeView(generics.ListAPIView):
 
 @api_view(['POST'])
 def recipe_query(request):
+    print('incoming...')
     search_serializer = RecipeSearchSerializer(data=request.data)
     if search_serializer.is_valid(raise_exception=True):
         query = search_serializer.data.get('query')
@@ -27,7 +28,7 @@ def recipe_query(request):
     query_vec = vectorize_query(query)
     top_n_recipes = compute_similarity(query_vec)
 
-    recipe_objects = RecipeDetails.objects.filter(id__in=top_n_recipes)
+    recipe_objects = RecipeDetails.objects.filter(index__in=top_n_recipes)
     recipe_det_serializer = RecipeDisplaySerializer(recipe_objects, many=True)
     return Response(recipe_det_serializer.data, status=status.HTTP_200_OK)
 
@@ -52,15 +53,15 @@ def vectorize_query(query):
 
 def compute_similarity(query_vec):
     n = 20
-    recipes = RecipeEmbeddings.objects.values_list('id', 'title_vec').order_by('?')[:50000]
+    recipes = RecipeEmbeddings.objects.values_list('index', 'weighted_title_vec')[:500]
     similarity_list = []
     start_time = time.time()
-    for id, title_vec in recipes:
+    for idx, title_vec in recipes:
         if title_vec is None:
             similarity = 0
         else:
             similarity = cosine_similarity(query_vec, np.array(ast.literal_eval(title_vec))).item()
-        similarity_list.append((id, similarity))
+        similarity_list.append((idx, similarity))
     elapsed_time = time.time() - start_time
     print('Elapsed_time: {}'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
     similarity_list = sorted(similarity_list, key=lambda x: x[1], reverse=True)
