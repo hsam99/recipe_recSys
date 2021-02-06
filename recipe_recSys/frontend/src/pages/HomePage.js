@@ -84,7 +84,7 @@ const HomePage = () => {
               <AppTopBar />
               </Route>
               <Route path='/search/:q' component={SearchResultPage} />
-              <Route path='/detail' component={RecipeDetailPage} />
+              <Route path='/recipe/:idx' component={RecipeDetailPage} />
             </Switch>
               {/* <AppTopBar /> */}
               {/* <Container fixed className={classes.container}>

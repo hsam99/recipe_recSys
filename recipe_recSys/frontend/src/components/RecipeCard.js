@@ -29,21 +29,22 @@ const useStyles = makeStyles({
 const RecipeCard = (props) => {
   const classes = useStyles();
   const title = props.title;
+  const image = props.image
   return (
     <Card className={classes.root}>
       <CardActionArea>
         <CardMedia
           className={classes.media}
-          image='http://img.sndimg.com/food/image/upload/w_512,h_512,c_fit,fl_progressive,q_95/v1/img/recipes/47/91/49/picX9CNE2.jpg'
-          title="Contemplative Reptile"
+          image={image}
+          alt={title}
         />
         <CardContent>
           <Typography gutterBottom variant="h5" component="h2">
-            Crunchy Onion Potato Bake
+            {title}
           </Typography>
         </CardContent>
       </CardActionArea>
-      <CardActions className={classes.cardAction}>
+      <CardActions>
         <Tooltip title='Like' arrow>
             <IconButton color="inherit">
                 <ThumbUpAltIcon />

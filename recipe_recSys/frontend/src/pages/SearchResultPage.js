@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import LoadingOverlay from 'react-loading-overlay';
-import searchApi from "../hooks/useSearch";
+import RecipeCard from "../components/RecipeCard";
 import RecipeDetailPage from "./RecipeDetailPage";
 import AppTopBar from "../components/AppTopBar";
 import { BrowserRouter as Router, Switch, Route, Link, Redirect } from "react-router-dom"
@@ -30,6 +30,9 @@ const useStyles = makeStyles((theme) => ({
     container: {
       backgroundColor: 'whitesmoke',
       height: '100%',
+      width: '100%',
+      marginTop: 35,
+      marginBottom: 50,
     },
     tile: {
       marginBottom: 15,
@@ -39,6 +42,10 @@ const useStyles = makeStyles((theme) => ({
     },
     overlay : {
       height: '100vh',
+
+    },
+    subtitle: {
+      paddingBottom: 1 
     }
   }));
 
@@ -67,13 +74,32 @@ const SearchResultComponent = (query) => {
       return (
         <div>
           <AppTopBar />
-          <Container fixed>
+          <Container fixed >
             <div className={classes.overlay}>
               <LoadingOverlay
                 active={true}
                 spinner
-                text='Loading your content...'
+                text='Loading recipes...'
                 className={classes.overlay}
+                styles={{
+                  content: (base) => ({
+                    ...base,
+                    color: 'black',
+                    fontFamily: 'Arial'
+                  }),
+                  overlay: (base) => ({
+                    ...base,
+                    background: 'rgba(255, 255, 255, 0.5)'
+                  }),
+                  spinner: (base) => ({
+                    ...base,
+                    width: '100px',
+                    '& svg circle': {
+                      stroke: 'rgba(0, 0, 0, 0.5)'
+                    }
+                  }),
+                  
+                }}
                 >
               </LoadingOverlay>
             </div>
@@ -87,22 +113,25 @@ const SearchResultComponent = (query) => {
               <AppTopBar />
               <Container fixed className={classes.container}>
                 <Typography variant='h4' className={classes.title}> {searchResult.length} Results</Typography>
-                <GridList cellHeight={220} cols={4} spacing={10}>
+                <GridList cellHeight={300} cols={3} spacing={10}>
                   {searchResult.map((tile) => (
                     <GridListTile className={classes.tile} key={tile.images[0]['id']}>
                       <img src={tile.images[0]['url']} alt={tile.title} />
+                      <Link to={`/recipe/${tile.index}/`}>
                       <GridListTileBar
                               title={tile.title}
+                              subtitle={'4.5 rating'}
                               classes={{
                                   root: classes.titleBar,
-                                  title: classes.title,
+                                  subtitle: classes.subtitle,
                               }}
-                              actionIcon={
-                                  <IconButton aria-label={`star ${tile.title}`}>
-                                      <StarBorderIcon className={classes.title} />
-                                  </IconButton>
-                              }
+                              // actionIcon={
+                              //     <IconButton aria-label={`star ${tile.title}`}>
+                              //         <StarBorderIcon className={classes.title} />
+                              //     </IconButton>
+                              // }
                           />
+                       </Link>
                     </GridListTile>
                   ))}
                 </GridList>

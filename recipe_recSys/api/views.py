@@ -8,7 +8,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .apps import RecipeSearchConfig
 from .models import (RecipeDetails, RecipeEmbeddings)
-from .serializers import (RecipeSearchSerializer, RecipeDisplaySerializer)
+from .serializers import (RecipeDetailSerializer, RecipeDisplaySerializer)
 
 import time
 from rest_framework import generics, status
@@ -25,7 +25,6 @@ def recipe_query(request, q):
     #     query = search_serializer.data.get('query')
     # else:
     #     return Response('Invalid query')
-    print(q)
     query_vec = vectorize_query(q)
     top_n_recipes = compute_similarity(query_vec)
 
@@ -33,6 +32,18 @@ def recipe_query(request, q):
     recipe_det_serializer = RecipeDisplaySerializer(recipe_objects, many=True)
     return Response(recipe_det_serializer.data, status=status.HTTP_200_OK)
 
+
+@api_view(['GET'])
+def get_recipe_detail(request, idx):
+    print('incoming...')
+    # search_serializer = RecipeSearchSerializer(data=request.data)
+    # if search_serializer.is_valid(raise_exception=True):
+    #     query = search_serializer.data.get('query')
+    # else:
+    #     return Response('Invalid query')
+    target_recipe = RecipeDetails.objects.get(index=idx)
+    recipe_det_serializer = RecipeDetailSerializer(target_recipe)
+    return Response(recipe_det_serializer.data, status=status.HTTP_200_OK)
 
 def vectorize_query(query):
     stop_words = set(stopwords.words('english'))
@@ -54,7 +65,7 @@ def vectorize_query(query):
 
 def compute_similarity(query_vec):
     n = 20
-    recipes = RecipeEmbeddings.objects.values_list('index', 'weighted_title_vec')[:500]
+    recipes = RecipeEmbeddings.objects.values_list('index', 'weighted_title_vec')[:5000]
     similarity_list = []
     start_time = time.time()
     for idx, title_vec in recipes:
