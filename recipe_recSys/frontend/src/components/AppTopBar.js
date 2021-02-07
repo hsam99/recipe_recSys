@@ -11,9 +11,8 @@ import TurnedInIcon from '@material-ui/icons/TurnedIn';
 import AccountBoxIcon from '@material-ui/icons/AccountBox';
 import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 import Tooltip from '@material-ui/core/Tooltip';
-import searchApi from "../hooks/useSearch";
 import { useHistory } from 'react-router-dom';
-import axios from 'axios';
+import HomeIcon from '@material-ui/icons/Home';
 
 
 const useStyles = makeStyles((theme) => ({
@@ -119,9 +118,9 @@ const AppTopBar = () => {
                         </FormControl>
                     </form>
                     <div className={classes.rightEnd}>
-                        <Tooltip title='Account' arrow>
-                            <IconButton color="inherit">
-                                <AccountBoxIcon />
+                        <Tooltip title='Home' arrow>
+                            <IconButton color="inherit" href='/'>
+                                <HomeIcon />
                             </IconButton>
                         </Tooltip>
                         <Tooltip title='Saved' arrow>
