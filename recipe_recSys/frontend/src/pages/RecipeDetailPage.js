@@ -7,47 +7,64 @@ import GridList from '@material-ui/core/GridList';
 import GridListTile from '@material-ui/core/GridListTile';
 import Container from "@material-ui/core/Container";
 import Typography from "@material-ui/core/Typography";
+import Rating from '@material-ui/lab/Rating';
+import Box from '@material-ui/core/Box';
 
 const useStyles = makeStyles((theme) => ({
     root: {
       overflow: 'hidden',
     },
     container: {
-      display: 'flex',
+      [theme.breakpoints.up('md')]: {
+          display: 'flex'
+      },
       height: '100%',
-      justifyContent: 'flex-start',
-      margin: 50,
-      backgroundColor: theme.palette.Paper,
-      paddingBottom: 25,
+      marginTop: 25,
+      backgroundColor: '#e3e2e1',
+      padding: 20,
+      paddingBottom: 5,
+      [theme.breakpoints.down('sm')]: {
+        height: '100%',
+        left: 0,
+        top: 0,
+        padding: 15,
+        marginTop: 25,
+      },
+    },
+    infoSection: {
+        marginTop: 50
     },
     image: {
-        width: 350,
-        height: 300,
+        width: '100%',
+        minHeight: 310,
+        maxHeight: 345,
+        [theme.breakpoints.down('sm')]: {
+            width: '100%',
+            height: '100%',
+        },
     },
     gridlist: {
-        flexGrow: 0.5,
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-evenly'
+        width: 300,
+        height: 375,
+        [theme.breakpoints.down('sm')]: {
+            width: 'auto',
+            height: 'auto'
+        },
     },
     content: {
-        flexGrow: 5,
-    },
-    tile: {
-      marginBottom: 15,
+        [theme.breakpoints.up('md')]: {
+            paddingLeft: 50,
+        },
     },
     title: {
-      padding: theme.spacing(4, 0, 2, 0),
+      fontFamily: 'Times New Roman',
+      marginBottom: 15,
     },
     overlay : {
       height: '100vh',
     },
-    subtitle: {
-      paddingBottom: 1 
-    },
-    test: {
-        alignItems: 'center',
-        flex: 1,
+    rating: {
+        display: 'flex',
     }
   }));
 
@@ -80,23 +97,26 @@ const RecipeDetailPage = (props) => {
         return (
             <div>
                 <AppTopBar />
+                <Container fixed>
                 <div className={classes.container}>
-                    <GridList cols={1} cellHeight={270} spacing={10} className={classes.gridlist}>
+                    <Carousel className={classes.gridlist} autoPlay={false}>
                         {
                             images.map((image) => (
-                                <GridListTile>
                                     <img key={image['id']} src={image['url']} alt={title} className={classes.image}/>
-                                </GridListTile>))
+                            ))
                         }
-                    </GridList>
+                    </Carousel>
                     <div className={classes.content}>
-                        <Typography variant={'h4'}>{title}</Typography>
+                    <Typography className={classes.title} variant={'h4'}>{title}</Typography>
+                    <div className={classes.rating}><Rating name="read-only" value={4} readOnly size="small"/> <Box ml={2}>69 ratings</Box></div>
                     </div>
-                    <div>
-                    <p>Rate here</p>
                 </div>
-                </div>
+                <Box className={classes.infoSection}>
+                    <Typography className={classes.title} variant={'h4'}>Ingredients</Typography>
+                </Box>
+                </Container>
             </div>
+            
         )
     }
     else {
