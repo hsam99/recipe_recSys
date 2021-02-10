@@ -6,6 +6,24 @@
 #   * Remove `managed = False` lines if you wish to allow Django to create, modify, and delete the table
 # Feel free to rename the models, but don't rename db_table values or field names.
 from django.db import models
+from django.conf import settings
+import random
+
+User = settings.AUTH_USER_MODEL
+
+
+class RecipeRating(models.Model):
+    recipe = models.ForeignKey('RecipeDetails', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    rating = models.SmallIntegerField(blank=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+
+class RecipeSave(models.Model):
+    recipe = models.ForeignKey('RecipeDetails', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    saved = models.BooleanField(blank=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
 
 
 class RecipeDetails(models.Model):
@@ -17,8 +35,8 @@ class RecipeDetails(models.Model):
     images = models.TextField(blank=True, null=True)
     id = models.TextField(blank=True, null=True)
     instructions = models.TextField(blank=True, null=True)
-    # likes = models.ManyToManyField(User)
-    # saved = models.ManyToManyField(User)
+    rating = models.ManyToManyField(User, related_name='user_rating', blank=True, through=RecipeRating)
+    saved = models.ManyToManyField(User, related_name='user_saved', blank=True, through=RecipeSave)
 
     class Meta:
         managed = True
