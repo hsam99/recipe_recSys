@@ -20,6 +20,8 @@ import ListSubheader from '@material-ui/core/ListSubheader';
 import { Divider } from "@material-ui/core";
 import StarBorderIcon from '@material-ui/icons/StarBorder';
 import IconButton from '@material-ui/core/IconButton';
+import SignInPage from './SignInPage';
+import SignUpPage from './SignUpPage';
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -84,6 +86,8 @@ const HomePage = () => {
               <AppTopBar />
               </Route>
               <Route path='/search/:q' component={SearchResultPage} />
+              <Route path='/signin' component={SignInPage} />
+              <Route path='/signup' component={SignUpPage} />
               <Route path='/recipe/:idx' component={RecipeDetailPage} />
             </Switch>
               {/* <AppTopBar /> */}

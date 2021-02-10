@@ -1,12 +1,13 @@
 *.log
 *.pot
 *.pyc
-__pycache__
+__pycache__/
 venv/
 media
 node_modules
 /.pnp
 .pnp.js
+.vscode
 
 # testing
 coverage

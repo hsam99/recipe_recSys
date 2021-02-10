@@ -102,7 +102,7 @@ const AppTopBar = () => {
         <div className={classes.root}>
             <AppBar position="sticky" className={classes.appBar}>
                 <ToolBar>
-                    <Typography variant="h6" className={classes.title}>HealthyEats</Typography>
+                    <Typography variant="h6" className={classes.title}>Recipe RecSys</Typography>
                     <form className={classes.form} onSubmit={handleSubmit}>
                         <FormControl className={classes.searchBar}>
                             <div className={classes.searchIcon}>
