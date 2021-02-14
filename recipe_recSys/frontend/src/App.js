@@ -23,7 +23,7 @@ const fakeAuth = {
 
 const PrivateRoute = ({ component: Component, ...rest }) => {
   const [isAuthenticated, setAuthentication] = useState(false);
-  const [flag, setFlag] = useState(false);
+  const [flag, setFlag] = useState(false); // ensure authentication is checked before returning redirect 
 
   useEffect(async () => {
     await axios.get('/api/session/')

@@ -52,14 +52,19 @@ export default function SignInPage(props) {
   const [password, setPassword] = useState('');
   const [alert, setAlert] = useState(false);
   const [flag, setFlag] = useState(true);
-  console.log(props.location.state)
+  // console.log(props.location.state.from.pathname)
 
-  if(props.location.state){
-      setAlert(true)
-      props.location.state = undefined
-    } 
+  try{
+    if(props.location.state.from.pathname == '/signup/'){
+      if(props.location.state.fromSignUp){
+        setAlert(true)
+        props.location.state = undefined
+      }
+    }
+  }
+  catch{
+  }
 
-  
   useEffect(async () => {
     await axios.get('/api/session/')
     .then((response) => {

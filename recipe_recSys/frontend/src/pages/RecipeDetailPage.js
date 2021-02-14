@@ -13,6 +13,13 @@ import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
 import LoadingOverlay from 'react-loading-overlay';
+import DialogTitle from '@material-ui/core/DialogTitle';
+import Dialog from '@material-ui/core/Dialog';
+import DialogActions from '@material-ui/core/DialogActions';
+import DialogContent from '@material-ui/core/DialogContent';
+import DialogContentText from '@material-ui/core/DialogContentText';
+import { Link } from 'react-router-dom';
+import Button from '@material-ui/core/Button';
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -99,15 +106,74 @@ const useStyles = makeStyles((theme) => ({
         [theme.breakpoints.only('md')]: {
             maxWidth: 400
         },
+    },
+    dialog: {
+        padding: 10,
     }
   }));
+
+const RatingDialog = (props) => {
+    const [rating, setRating] = useState(0);
+    const { onClose, open } = props;
+    const classes = useStyles();
+
+    const handleClose = () => {
+      onClose();
+    };
+  
+    const handleRatingSubmit = () => {
+      onClose();
+      window.alert(rating)
+    };
+
+    return (
+      <Dialog
+        open={open}
+        onClose={handleClose}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+          <div className={classes.dialog}>
+      <DialogTitle id="alert-dialog-title">{"Rate this recipe"}</DialogTitle>
+      <DialogContent>
+
+        <Rating
+          name="simple-controlled"
+          size="large"
+          value={rating}
+          onChange={(event, newValue) => {
+            setRating(newValue);
+          }}
+        />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose} color="primary" size="small">
+            Cancel
+          </Button>
+          <Button color="primary" autoFocus size="small" onClick={handleRatingSubmit}>
+            Submit
+          </Button>
+        </DialogActions>
+        </div>
+      </Dialog>
+    )
+}
 
 const RecipeDetailPage = (props) => {
     
     const classes = useStyles();
     const [detail, setDetail] = useState({});
     const [loading, setLoading] = useState(true);
+    const [open, setOpen] = useState(false);
     const idx = props.match.params.idx;
+    
+    const handleOpen = () => {
+        setOpen(true);
+    };
+    
+    const handleClose = () => {
+        setOpen(false);
+    };
 
     useEffect(() => {
         axios.get(`/api/recipe/${idx}/`)
@@ -138,8 +204,12 @@ const RecipeDetailPage = (props) => {
                         }
                     </Carousel>
                     <div className={classes.content}>
-                    <Typography className={classes.title} variant={'h4'}>{title}</Typography>
-                    <div className={classes.rating}><Rating name="read-only" value={4} readOnly size="small"/> <Box ml={2}>69 ratings</Box></div>
+                        <Typography className={classes.title} variant={'h4'}>{title}</Typography>
+                        <div className={classes.rating}>
+                            <Rating name="read-only" value={4} readOnly size="small"/> 
+                            <Box ml={2}>69 ratings</Box>
+                            <Link href='#' onClick={handleOpen}><Box ml={2}>Rate</Box></Link>
+                        </div> 
                     </div>
                 </div>
                 <Box className={classes.infoSection}>
@@ -172,8 +242,8 @@ const RecipeDetailPage = (props) => {
                     </div>
                 </Box>
                 </Container>
+                <RatingDialog open={open} onClose={handleClose}/>
             </div>
-            
         )
     }
     else {

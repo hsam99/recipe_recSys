@@ -52,7 +52,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export default function SignUpPage() {
+export default function SignUpPage(props) {
   const classes = useStyles();
   const cookies = new Cookies();
   const [redirectToReferrer, setredirectToReferrer] = useState(false);
@@ -109,7 +109,7 @@ export default function SignUpPage() {
   if(userCreated === true){
     return(
       <div>
-        <Redirect to={{pathname: '/signin/', state: { fromSignUp: true }}} />
+        <Redirect to={{pathname: '/signin/', state: { fromSignUp: true, from: props.location }}} />
       </div>
     )
   }
