@@ -44,79 +44,15 @@ const useStyles = makeStyles((theme) => ({
 
 const HomePage = () => {
     const classes = useStyles();
+
   
-    // const [searchResult, makeSearch] = searchApi();
-    // const [loading, setLoading] = useState(false);
-    // const [query, setQuery] = useState('');
-
-    // const handleQueryChange = (e) => {
-    //   setQuery(e.target.value);
-    // }
-    
-    // const handleSubmit = (e) => {
-    //   e.preventDefault();
-    //   makeSearch(query);
-    //   setLoading(true);
-
-    // };
-
-    // if (searchResult.length == 0) {
-    //   return (
-    //     <div>
-    //       <AppTopBar query={query} handleQueryChange={handleQueryChange} handleSubmit={handleSubmit} />
-    //       <Container fixed>
-    //         <div className={classes.overlay}>
-    //           <LoadingOverlay
-    //             active={loading}
-    //             spinner
-    //             text='Loading your content...'
-    //             className={classes.overlay}
-    //             >
-    //           </LoadingOverlay>
-    //         </div>
-    //       </Container>
-    //     </div>
-    //   )
-    // }
-    // else {
       return (
-          <Router>
-            <Switch>
-              <Route path='/' exact>
-              <AppTopBar />
-              </Route>
-              <Route path='/search/:q' component={SearchResultPage} />
-              <Route path='/signin' component={SignInPage} />
-              <Route path='/signup' component={SignUpPage} />
-              <Route path='/recipe/:idx' component={RecipeDetailPage} />
-            </Switch>
-              {/* <AppTopBar /> */}
-              {/* <Container fixed className={classes.container}>
-                <Typography variant='h4' className={classes.title}> {searchResult.length} Results</Typography>
-                <GridList cellHeight={220} cols={4} spacing={10}>
-                  {searchResult.map((tile) => (
-                    <GridListTile className={classes.tile} key={tile.images[0]['id']}>
-                      <img src={tile.images[0]['url']} alt={tile.title} />
-                      <GridListTileBar
-                              title={tile.title}
-                              classes={{
-                                  root: classes.titleBar,
-                                  title: classes.title,
-                              }}
-                              actionIcon={
-                                  <IconButton aria-label={`star ${tile.title}`}>
-                                      <StarBorderIcon className={classes.title} />
-                                  </IconButton>
-                              }
-                          />
-                    </GridListTile>
-                  ))}
-                </GridList>
-              </Container>
-              <RecipeList searchResult={searchResult} /> */}
-          </Router>
+        <div>
+          <AppTopBar />
+        </div>
+
       )
     }
-// }
+
 
 export default HomePage

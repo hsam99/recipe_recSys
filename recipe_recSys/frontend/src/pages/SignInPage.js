@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Avatar from '@material-ui/core/Avatar';
 import Button from '@material-ui/core/Button';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -12,19 +12,24 @@ import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
 import Container from '@material-ui/core/Container';
+import Cookies from "universal-cookie";
+import axios from 'axios';
+import { Redirect } from 'react-router-dom';
+import { Alert, AlertTitle } from '@material-ui/lab';
 
 
 const useStyles = makeStyles((theme) => ({
   paper: {
-    marginTop: theme.spacing(14),
+    marginTop: theme.spacing(15),
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     border: '4px solid #ebe8e1',
     padding: theme.spacing(6),
   },
-  box :{
-
+  alertbox :{
+    width: '100%',
+    marginTop: 15
   },
   avatar: {
     margin: theme.spacing(1),
@@ -39,70 +44,138 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export default function SignInPage() {
+export default function SignInPage(props) {
   const classes = useStyles();
+  const cookies = new Cookies();
+  const [redirectToReferrer, setredirectToReferrer] = useState(false);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [alert, setAlert] = useState(false);
+  const [flag, setFlag] = useState(true);
+  console.log(props.location.state)
 
-  return (
-    <Container component="main" maxWidth="xs">
-      <CssBaseline />
-      {/* <Box className={classes.box}> */}
-      <Box className={classes.paper} borderRadius='5%'>
-        <Avatar className={classes.avatar}>
-          <LockOutlinedIcon />
-        </Avatar>
-        <Typography component="h1" variant="h5">
-          Sign in
-        </Typography>
-        <form className={classes.form} noValidate>
-          <TextField
-            variant="outlined"
-            margin="normal"
-            required
-            fullWidth
-            id="username"
-            label="Username"
-            name="username"
-            autoFocus
-          />
-          <TextField
-            variant="outlined"
-            margin="normal"
-            required
-            fullWidth
-            name="password"
-            label="Password"
-            type="password"
-            id="password"
-            autoComplete="current-password"
-          />
-          {/* <FormControlLabel
-            control={<Checkbox value="remember" color="primary" />}
-            label="Remember me"
-          /> */}
-          <Button
-            type="submit"
-            fullWidth
-            variant="contained"
-            color="primary"
-            className={classes.submit}
-          >
-            Sign In
-          </Button>
-          <Grid container justify='flex-end'>
-            {/* <Grid item xs>
-              <Link href="#" variant="body2">
-                Forgot password?
-              </Link>
-            </Grid> */}
-            <Grid item>
-              <Link href="/signup" variant="body2">
-                {"Don't have an account? Sign Up"}
-              </Link>
-            </Grid>
-          </Grid>
-        </form>
-      </Box>
-      {/* </Box> */}
-    </Container>
-  );
+  if(props.location.state){
+      setAlert(true)
+      props.location.state = undefined
+    } 
+
+  
+  useEffect(async () => {
+    await axios.get('/api/session/')
+    .then((response) => {
+      if (response.data.isAuthenticated){
+        setredirectToReferrer(true);
+      } else {
+        setredirectToReferrer(false);
+      }
+    }, (error) => {
+      console.log(error);
+    });
+  }, [])
+  
+
+  const handleUsernameChange = (e) => {
+    setUsername(e.target.value);
+  }
+
+  const handlePasswordChange = (e) => {
+    setPassword(e.target.value);
+  }
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    axios.post('/api/login/', {
+      username: username,
+      password: password
+    }, {
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": cookies.get("csrftoken"),
+      }
+    })
+    .then((response) => {
+      setredirectToReferrer(true);
+      console.log(response.data)
+    }, (error) => {
+      console.log(error.response.data);
+    });
+  }
+
+  if (redirectToReferrer === true) {
+    return(
+      <div>
+        <Redirect to={'/'} />
+      </div>
+    )
+  } else {
+      return (
+        <Container component="main" maxWidth="xs">
+          <CssBaseline />
+          {/* <Box className={classes.box}> */}
+          <Box className={classes.paper} borderRadius='5%'>
+            <Avatar className={classes.avatar}>
+              <LockOutlinedIcon />
+            </Avatar>
+            <Typography component="h1" variant="h5">
+              Sign in
+            </Typography>
+            <Alert severity="success" className={classes.alertbox} style={{display: alert === true ? 'block': 'none'}}>
+              <AlertTitle>Success</AlertTitle>
+              Account created!
+            </Alert>
+            <form className={classes.form} onSubmit={handleSubmit}>
+              <TextField
+                variant="outlined"
+                margin="normal"
+                required
+                fullWidth
+                id="username"
+                label="Username"
+                name="username"
+                autoFocus
+                onChange={handleUsernameChange}
+              />
+              <TextField
+                variant="outlined"
+                margin="normal"
+                required
+                fullWidth
+                name="password"
+                label="Password"
+                type="password"
+                id="password"
+                autoComplete="current-password"
+                onChange={handlePasswordChange}
+              />
+              {/* <FormControlLabel
+                control={<Checkbox value="remember" color="primary" />}
+                label="Remember me"
+              /> */}
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                color="primary"
+                className={classes.submit}
+              >
+                Sign In
+              </Button>
+              <Grid container justify='flex-end'>
+                {/* <Grid item xs>
+                  <Link href="#" variant="body2">
+                    Forgot password?
+                  </Link>
+                </Grid> */}
+                <Grid item>
+                  <Link href="/signup" variant="body2">
+                    {"Don't have an account? Sign Up"}
+                  </Link>
+                </Grid>
+              </Grid>
+            </form>
+          </Box>
+          {/* </Box> */}
+        </Container>
+      );
+    }
 }

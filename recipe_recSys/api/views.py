@@ -9,10 +9,55 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .apps import RecipeSearchConfig
 from .models import (RecipeDetails, RecipeEmbeddings)
-from .serializers import (RecipeDetailSerializer, RecipeDisplaySerializer)
-
+from .serializers import (RecipeDetailSerializer, RecipeDisplaySerializer, LoginSerializer, SignUpSerializer)
 import time
-from rest_framework import generics, status
+from rest_framework import generics, status, permissions
+from django.contrib.auth import authenticate, login, logout
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.http import JsonResponse
+from django.contrib.auth.models import User
+
+
+@api_view(['POST'])
+def login_view(request):
+    login_serializer = LoginSerializer(data=request.data)
+    if login_serializer.is_valid(raise_exception=True):
+        username = login_serializer.data.get('username')
+        password = login_serializer.data.get('password')
+
+    if username is None or password is None:
+        return JsonResponse({'detail': 'Please provide username and password.'}, status=400)
+
+    user = authenticate(username=username, password=password)
+
+    if user is None:
+        return JsonResponse({'detail': 'Wrong username or password.'}, status=400)
+
+    login(request, user)
+    return JsonResponse({'detail': 'Successfully logged in.'})
+
+
+class SignUpView(generics.CreateAPIView):
+    permission_classes = [permissions.AllowAny]
+    queryset = User.objects.all()
+    serializer_class = SignUpSerializer
+
+
+def logout_view(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({'detail': 'You\'re not logged in.'}, status=400)
+
+    logout(request)
+    return JsonResponse({'detail': 'Successfully logged out.'})
+
+
+@ensure_csrf_cookie
+def session_view(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({'isAuthenticated': False})
+
+    return JsonResponse({'isAuthenticated': True})
+
 
 class RecipeView(generics.ListAPIView):
     queryset = RecipeDetails.objects.all()
@@ -36,6 +81,7 @@ def recipe_query(request, q):
 
 @api_view(['GET'])
 def get_recipe_detail(request, idx):
+    print(request.user)
     print('incoming...')
     # search_serializer = RecipeSearchSerializer(data=request.data)
     # if search_serializer.is_valid(raise_exception=True):

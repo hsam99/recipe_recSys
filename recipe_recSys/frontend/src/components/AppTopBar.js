@@ -13,6 +13,8 @@ import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 import Tooltip from '@material-ui/core/Tooltip';
 import { useHistory } from 'react-router-dom';
 import HomeIcon from '@material-ui/icons/Home';
+import axios from 'axios';
+import { Redirect } from 'react-router-dom';
 
 
 const useStyles = makeStyles((theme) => ({
@@ -87,57 +89,76 @@ const AppTopBar = () => {
 
     const classes = useStyles();
     const [query, setQuery] = useState('');
+    const [logout, setLogout] = useState(false);
     const history = useHistory();
 
     const handleQueryChange = (e) => {
       setQuery(e.target.value);
-    }
+    };
     
     const handleSubmit = (e) => {
       e.preventDefault();
       history.push(`/search/${query}/`);
     };
 
-    return (
-        <div className={classes.root}>
-            <AppBar position="sticky" className={classes.appBar}>
-                <ToolBar>
-                    <Typography variant="h6" className={classes.title}>Recipe RecSys</Typography>
-                    <form className={classes.form} onSubmit={handleSubmit}>
-                        <FormControl className={classes.searchBar}>
-                            <div className={classes.searchIcon}>
-                                <SearchIcon />
-                            </div>
-                            <InputBase placeholder="Search…" inputProps={{ 'aria-label': 'search' }}
-                                classes={{
-                                    root: classes.inputRoot,
-                                    input: classes.inputInput}}
-                                value={query}
-                                onChange={handleQueryChange}
-                                />
-                        </FormControl>
-                    </form>
-                    <div className={classes.rightEnd}>
-                        <Tooltip title='Home' arrow>
-                            <IconButton color="inherit" href='/'>
-                                <HomeIcon />
-                            </IconButton>
-                        </Tooltip>
-                        <Tooltip title='Saved' arrow>
-                            <IconButton color="inherit">
-                                <TurnedInIcon />
-                            </IconButton>
-                        </Tooltip>
-                        <Tooltip title='Logout' arrow>
-                            <IconButton color="inherit">
-                                <ExitToAppIcon />
-                            </IconButton>
-                        </Tooltip>
-                    </div>
-                </ToolBar>
-            </AppBar>
-        </div>
-    )
+    const handleLogout = async () => {
+      await axios.get('/api/logout/')
+        .then((response) => {
+          setLogout(true);
+        }, (error) => {
+          console.log(errors);
+        });
+    }
+
+    if (logout === true){
+        return(
+            <div>
+              <Redirect to={'/signin'} />
+            </div>
+          )
+    }
+    else {
+        return (
+            <div className={classes.root}>
+                <AppBar position="sticky" className={classes.appBar}>
+                    <ToolBar>
+                        <Typography variant="h6" className={classes.title}>Recipe RecSys</Typography>
+                        <form className={classes.form} onSubmit={handleSubmit}>
+                            <FormControl className={classes.searchBar}>
+                                <div className={classes.searchIcon}>
+                                    <SearchIcon />
+                                </div>
+                                <InputBase placeholder="Search…" inputProps={{ 'aria-label': 'search' }}
+                                    classes={{
+                                        root: classes.inputRoot,
+                                        input: classes.inputInput}}
+                                    value={query}
+                                    onChange={handleQueryChange}
+                                    />
+                            </FormControl>
+                        </form>
+                        <div className={classes.rightEnd}>
+                            <Tooltip title='Home' arrow>
+                                <IconButton color="inherit" href='/'>
+                                    <HomeIcon />
+                                </IconButton>
+                            </Tooltip>
+                            <Tooltip title='Saved' arrow>
+                                <IconButton color="inherit">
+                                    <TurnedInIcon />
+                                </IconButton>
+                            </Tooltip>
+                            <Tooltip title='Logout' arrow>
+                                <IconButton color="inherit" onClick={handleLogout}>
+                                    <ExitToAppIcon />
+                                </IconButton>
+                            </Tooltip>
+                        </div>
+                    </ToolBar>
+                </AppBar>
+            </div>
+        )
+    }
 }
 
 export default AppTopBar
