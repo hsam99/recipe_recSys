@@ -20,6 +20,7 @@ import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import { Link } from 'react-router-dom';
 import Button from '@material-ui/core/Button';
+import Cookies from "universal-cookie";
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -113,8 +114,9 @@ const useStyles = makeStyles((theme) => ({
   }));
 
 const RatingDialog = (props) => {
+    const cookies = new Cookies();
     const [rating, setRating] = useState(0);
-    const { onClose, open } = props;
+    const { onClose, open, recipe_idx } = props;
     const classes = useStyles();
 
     const handleClose = () => {
@@ -122,8 +124,26 @@ const RatingDialog = (props) => {
     };
   
     const handleRatingSubmit = () => {
+      if (rating != null){
+        axios.post('/api/rate/', {
+            recipe_idx: recipe_idx,
+            rating: rating,
+          }, {
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": cookies.get("csrftoken"),
+            }
+          })
+          .then((response) => {
+            console.log(response.data)
+          }, (error) => {
+            console.log(error.response.data);
+          });
+      }
+      else {
+          onClose();
+      }
       onClose();
-      window.alert(rating)
     };
 
     return (
@@ -242,7 +262,7 @@ const RecipeDetailPage = (props) => {
                     </div>
                 </Box>
                 </Container>
-                <RatingDialog open={open} onClose={handleClose}/>
+                <RatingDialog open={open} onClose={handleClose} recipe_idx={idx} />
             </div>
         )
     }

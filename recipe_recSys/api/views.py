@@ -5,17 +5,18 @@ import ast
 from nltk.tokenize import RegexpTokenizer
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import stopwords
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from .apps import RecipeSearchConfig
-from .models import (RecipeDetails, RecipeEmbeddings)
-from .serializers import (RecipeDetailSerializer, RecipeDisplaySerializer, LoginSerializer, SignUpSerializer)
+from .models import (RecipeDetails, RecipeEmbeddings, RecipeRating)
+from .serializers import (RecipeDetailSerializer, RecipeDisplaySerializer, LoginSerializer, SignUpSerializer, RecipeRatingSerializer)
 import time
 from rest_framework import generics, status, permissions
 from django.contrib.auth import authenticate, login, logout
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.http import JsonResponse
 from django.contrib.auth.models import User
+from rest_framework.permissions import IsAuthenticated
 
 
 @api_view(['POST'])
@@ -63,7 +64,9 @@ class RecipeView(generics.ListAPIView):
     queryset = RecipeDetails.objects.all()
     serializer_class = RecipeDisplaySerializer
 
+
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def recipe_query(request, q):
     print('incoming...')
     # search_serializer = RecipeSearchSerializer(data=request.data)
@@ -80,6 +83,7 @@ def recipe_query(request, q):
 
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def get_recipe_detail(request, idx):
     print(request.user)
     print('incoming...')
@@ -91,6 +95,29 @@ def get_recipe_detail(request, idx):
     target_recipe = RecipeDetails.objects.get(index=idx)
     recipe_det_serializer = RecipeDetailSerializer(target_recipe)
     return Response(recipe_det_serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def recipe_rating_view(request):
+    rating_serializer = RecipeRatingSerializer(data=request.data)
+    if rating_serializer.is_valid(raise_exception=True):
+        recipe_idx = rating_serializer.data.get('recipe_idx')
+        rating = rating_serializer.data.get('rating')
+    else:
+        return JsonResponse({'detail': 'Invalid input'})
+    recipe = RecipeDetails.objects.get(index=recipe_idx)
+    user = request.user
+    if user in recipe.rating.all():
+        update_recipe = RecipeRating.objects.get(recipe=recipe, user=user)
+        update_recipe.rating = rating
+        update_recipe.save()
+        return JsonResponse({'detail': 'Rating updated'})
+    else:
+        RecipeRating.objects.create(recipe=recipe, user=user, rating=rating)
+
+    return JsonResponse({'detail': 'Recipe rated'})
+
 
 def vectorize_query(query):
     stop_words = set(stopwords.words('english'))
