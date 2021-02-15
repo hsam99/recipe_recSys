@@ -29,9 +29,13 @@ class SignUpSerializer(serializers.ModelSerializer):
 
 
 class RecipeDetailSerializer(serializers.ModelSerializer):
+    rating = serializers.SerializerMethodField()
+    avg_rating = serializers.SerializerMethodField()
+    rating_count = serializers.SerializerMethodField()
+
     class Meta:
         model = RecipeDetails
-        fields = ['index', 'title', 'images', 'ingredients', 'instructions']
+        fields = ['index', 'title', 'images', 'ingredients', 'instructions', 'rating', 'avg_rating', 'rating_count']
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
@@ -40,6 +44,26 @@ class RecipeDetailSerializer(serializers.ModelSerializer):
         data['instructions'] = ast.literal_eval(data['instructions'])
         return data
 
+    def get_rating(self, obj):
+        user = self.context['request'].user
+        if user in obj.rating.all():
+            return RecipeRating.objects.get(recipe=obj, user=user).rating
+        else:
+            return 0
+
+    def get_avg_rating(self, obj):
+        total_rating = 0
+        all_ratings = RecipeRating.objects.filter(recipe=obj)
+
+        if len(all_ratings) == 0:
+            return None
+        else:
+            for recipe_rating in all_ratings:
+                total_rating += recipe_rating.rating
+            return total_rating/len(all_ratings)
+
+    def get_rating_count(self, obj):
+        return len(RecipeRating.objects.filter(recipe=obj))
 
 class RecipeDisplaySerializer(serializers.ModelSerializer):
 

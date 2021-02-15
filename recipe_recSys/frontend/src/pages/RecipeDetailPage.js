@@ -115,8 +115,8 @@ const useStyles = makeStyles((theme) => ({
 
 const RatingDialog = (props) => {
     const cookies = new Cookies();
-    const [rating, setRating] = useState(0);
-    const { onClose, open, recipe_idx } = props;
+    const { onClose, open, recipe_idx, prev_rating } = props;
+    const [rating, setRating] = useState(prev_rating);
     const classes = useStyles();
 
     const handleClose = () => {
@@ -124,10 +124,12 @@ const RatingDialog = (props) => {
     };
   
     const handleRatingSubmit = () => {
-      if (rating != null){
+        let value;
+        value = rating === null?0:rating
+
         axios.post('/api/rate/', {
             recipe_idx: recipe_idx,
-            rating: rating,
+            rating: value,
           }, {
             headers: {
               "Content-Type": "application/json",
@@ -139,10 +141,7 @@ const RatingDialog = (props) => {
           }, (error) => {
             console.log(error.response.data);
           });
-      }
-      else {
-          onClose();
-      }
+      
       onClose();
     };
 
@@ -156,7 +155,7 @@ const RatingDialog = (props) => {
           <div className={classes.dialog}>
       <DialogTitle id="alert-dialog-title">{"Rate this recipe"}</DialogTitle>
       <DialogContent>
-
+        <DialogContentText>Your rating:</DialogContentText>
         <Rating
           name="simple-controlled"
           size="large"
@@ -198,6 +197,7 @@ const RecipeDetailPage = (props) => {
     useEffect(() => {
         axios.get(`/api/recipe/${idx}/`)
         .then((response) => {
+        console.log(response)
         setDetail(response.data)
         setLoading(false)
         }, (error) => {
@@ -226,8 +226,8 @@ const RecipeDetailPage = (props) => {
                     <div className={classes.content}>
                         <Typography className={classes.title} variant={'h4'}>{title}</Typography>
                         <div className={classes.rating}>
-                            <Rating name="read-only" value={4} readOnly size="small"/> 
-                            <Box ml={2}>69 ratings</Box>
+                            <Rating name="read-only" value={detail.avg_rating} readOnly size="small"/> 
+                            <Box ml={2}>{detail.rating_count} ratings</Box>
                             <Link href='#' onClick={handleOpen}><Box ml={2}>Rate</Box></Link>
                         </div> 
                     </div>
@@ -262,7 +262,7 @@ const RecipeDetailPage = (props) => {
                     </div>
                 </Box>
                 </Container>
-                <RatingDialog open={open} onClose={handleClose} recipe_idx={idx} />
+                <RatingDialog open={open} onClose={handleClose} recipe_idx={idx} prev_rating={detail.rating}/>
             </div>
         )
     }

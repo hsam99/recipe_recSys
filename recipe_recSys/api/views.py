@@ -87,13 +87,8 @@ def recipe_query(request, q):
 def get_recipe_detail(request, idx):
     print(request.user)
     print('incoming...')
-    # search_serializer = RecipeSearchSerializer(data=request.data)
-    # if search_serializer.is_valid(raise_exception=True):
-    #     query = search_serializer.data.get('query')
-    # else:
-    #     return Response('Invalid query')
     target_recipe = RecipeDetails.objects.get(index=idx)
-    recipe_det_serializer = RecipeDetailSerializer(target_recipe)
+    recipe_det_serializer = RecipeDetailSerializer(target_recipe, context={'request': request})
     return Response(recipe_det_serializer.data, status=status.HTTP_200_OK)
 
 
@@ -104,17 +99,24 @@ def recipe_rating_view(request):
     if rating_serializer.is_valid(raise_exception=True):
         recipe_idx = rating_serializer.data.get('recipe_idx')
         rating = rating_serializer.data.get('rating')
+        print(rating)
     else:
         return JsonResponse({'detail': 'Invalid input'})
     recipe = RecipeDetails.objects.get(index=recipe_idx)
     user = request.user
     if user in recipe.rating.all():
-        update_recipe = RecipeRating.objects.get(recipe=recipe, user=user)
-        update_recipe.rating = rating
-        update_recipe.save()
+        if rating == 0:
+            recipe.rating.remove(user)
+        else:
+            update_recipe = RecipeRating.objects.get(recipe=recipe, user=user)
+            update_recipe.rating = rating
+            update_recipe.save()
         return JsonResponse({'detail': 'Rating updated'})
     else:
-        RecipeRating.objects.create(recipe=recipe, user=user, rating=rating)
+        if rating == 0:
+            pass
+        else:
+            RecipeRating.objects.create(recipe=recipe, user=user, rating=rating)
 
     return JsonResponse({'detail': 'Recipe rated'})
 
