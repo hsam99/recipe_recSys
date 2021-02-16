@@ -22,7 +22,6 @@ class RecipeRating(models.Model):
 class RecipeSave(models.Model):
     recipe = models.ForeignKey('RecipeDetails', on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    saved = models.BooleanField(blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
 
 

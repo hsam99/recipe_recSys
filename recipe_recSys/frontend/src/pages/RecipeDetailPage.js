@@ -21,6 +21,10 @@ import DialogContentText from '@material-ui/core/DialogContentText';
 import { Link } from 'react-router-dom';
 import Button from '@material-ui/core/Button';
 import Cookies from "universal-cookie";
+import { IconButton } from "@material-ui/core";
+import Tooltip from '@material-ui/core/Tooltip';
+import TurnedInIcon from '@material-ui/icons/TurnedIn';
+import ToggleButton from '@material-ui/lab/ToggleButton';
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -53,7 +57,7 @@ const useStyles = makeStyles((theme) => ({
         },
     },
     gridlist: {
-        width: 300,
+        width: 345,
         height: 375,
         [theme.breakpoints.down('sm')]: {
             width: 'auto',
@@ -64,6 +68,7 @@ const useStyles = makeStyles((theme) => ({
         [theme.breakpoints.up('md')]: {
             paddingLeft: 50,
         },
+        width: '100%'
     },
     title: {
         fontFamily: 'Times New Roman',
@@ -110,11 +115,24 @@ const useStyles = makeStyles((theme) => ({
     },
     dialog: {
         padding: 10,
+    },
+    saveButton: {
+        border: 'none',
+        height: 0,
+        width: 0,
+        marginTop: 10,
+        marginLeft: 10,
+        
+    },
+    rowDiv: {
+        display: 'flex',
+        justifyContent: 'space-between'
     }
   }));
 
+const cookies = new Cookies();
+
 const RatingDialog = (props) => {
-    const cookies = new Cookies();
     const { onClose, open, recipe_idx, prev_rating } = props;
     const [rating, setRating] = useState(prev_rating);
     const classes = useStyles();
@@ -178,6 +196,37 @@ const RatingDialog = (props) => {
     )
 }
 
+const SaveButton = (props) => {
+    const { save_state, recipe_idx, classes } = props;
+    const [selected, setSelected] = useState(save_state);
+
+    const handleSelected = () => {
+        setSelected(!selected);
+        axios.post('/api/save/', {
+            recipe_idx: recipe_idx,
+            save: selected,
+        }, {
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": cookies.get("csrftoken"),
+            }
+          })
+        .then((response) => {
+            console.log(response.data)
+        }, (error) => {
+            console.log(error.response.data);
+        });
+    };
+    
+    return (
+        <Tooltip title='Save' arrow>
+        <ToggleButton className={classes.saveButton} selected={selected} onChange={handleSelected}>
+            <TurnedInIcon fontSize={"large"} color={selected===true?'primary':'inherit'}/>
+        </ToggleButton>
+        </Tooltip>
+    )
+}
+
 const RecipeDetailPage = (props) => {
     
     const classes = useStyles();
@@ -224,7 +273,10 @@ const RecipeDetailPage = (props) => {
                         }
                     </Carousel>
                     <div className={classes.content}>
-                        <Typography className={classes.title} variant={'h4'}>{title}</Typography>
+                        <div className={classes.rowDiv}>
+                            <Typography className={classes.title} variant={'h4'}>{title}</Typography>
+                            <SaveButton classes={classes} save_state={detail.saved} recipe_idx={idx}/>
+                        </div>
                         <div className={classes.rating}>
                             <Rating name="read-only" value={detail.avg_rating} readOnly size="small"/> 
                             <Box ml={2}>{detail.rating_count} ratings</Box>

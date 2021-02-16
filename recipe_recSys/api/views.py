@@ -9,7 +9,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from .apps import RecipeSearchConfig
 from .models import (RecipeDetails, RecipeEmbeddings, RecipeRating)
-from .serializers import (RecipeDetailSerializer, RecipeDisplaySerializer, LoginSerializer, SignUpSerializer, RecipeRatingSerializer)
+from .serializers import (RecipeDetailSerializer, RecipeDisplaySerializer, LoginSerializer, SignUpSerializer, RecipeRatingSerializer, RecipeSaveSerializer)
 import time
 from rest_framework import generics, status, permissions
 from django.contrib.auth import authenticate, login, logout
@@ -99,7 +99,6 @@ def recipe_rating_view(request):
     if rating_serializer.is_valid(raise_exception=True):
         recipe_idx = rating_serializer.data.get('recipe_idx')
         rating = rating_serializer.data.get('rating')
-        print(rating)
     else:
         return JsonResponse({'detail': 'Invalid input'})
     recipe = RecipeDetails.objects.get(index=recipe_idx)
@@ -120,6 +119,25 @@ def recipe_rating_view(request):
 
     return JsonResponse({'detail': 'Recipe rated'})
 
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def recipe_save_view(request):
+    save_serializer = RecipeSaveSerializer(data=request.data)
+    if save_serializer.is_valid(raise_exception=True):
+        recipe_idx = save_serializer.data.get('recipe_idx')
+        save = save_serializer.data.get('save')
+    else:
+        return JsonResponse({'detail': 'Invalid input'})
+    recipe = RecipeDetails.objects.get(index=recipe_idx)
+    user = request.user
+
+    if user in recipe.saved.all():
+        recipe.saved.remove(user)
+    else:
+        recipe.saved.add(user)
+
+    return JsonResponse({'detail': 'Save updated'})
 
 def vectorize_query(query):
     stop_words = set(stopwords.words('english'))

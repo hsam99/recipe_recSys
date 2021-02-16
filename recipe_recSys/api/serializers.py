@@ -32,10 +32,11 @@ class RecipeDetailSerializer(serializers.ModelSerializer):
     rating = serializers.SerializerMethodField()
     avg_rating = serializers.SerializerMethodField()
     rating_count = serializers.SerializerMethodField()
+    saved = serializers.SerializerMethodField()
 
     class Meta:
         model = RecipeDetails
-        fields = ['index', 'title', 'images', 'ingredients', 'instructions', 'rating', 'avg_rating', 'rating_count']
+        fields = ['index', 'title', 'images', 'ingredients', 'instructions', 'rating', 'avg_rating', 'rating_count', 'saved']
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
@@ -65,6 +66,16 @@ class RecipeDetailSerializer(serializers.ModelSerializer):
     def get_rating_count(self, obj):
         return len(RecipeRating.objects.filter(recipe=obj))
 
+    def get_saved(self, obj):
+        user = self.context['request'].user
+        if user in obj.saved.all():
+            print('True')
+            return True
+        else:
+            print('False')
+            return False
+
+
 class RecipeDisplaySerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -81,3 +92,7 @@ class RecipeRatingSerializer(serializers.Serializer):
     recipe_idx = serializers.IntegerField(required=True)
     rating    = serializers.IntegerField(required=True)
 
+
+class RecipeSaveSerializer(serializers.Serializer):
+    recipe_idx = serializers.IntegerField(required=True)
+    save    = serializers.BooleanField(required=True)

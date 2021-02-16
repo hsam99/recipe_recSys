@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import (login_view, SignUpView, logout_view, session_view, recipe_query, RecipeView, get_recipe_detail, recipe_rating_view)
+from .views import (login_view, SignUpView, logout_view, session_view, recipe_query, RecipeView, get_recipe_detail, recipe_rating_view, recipe_save_view)
 
 urlpatterns = [
     path('login/', login_view, name='api-login'),
@@ -8,5 +8,6 @@ urlpatterns = [
     path('session/', session_view, name='api-session'),
     path('search/<str:q>/', recipe_query, name='recipe-query'),
     path('recipe/<int:idx>/', get_recipe_detail, name='recipe-det'),
-    path('rate/', recipe_rating_view, name='rate-recipe')
+    path('rate/', recipe_rating_view, name='rate-recipe'),
+    path('save/', recipe_save_view, name='rate-save')
 ]
