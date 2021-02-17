@@ -144,7 +144,7 @@ const AppTopBar = () => {
                                 </IconButton>
                             </Tooltip>
                             <Tooltip title='Saved' arrow>
-                                <IconButton color="inherit">
+                                <IconButton color="inherit" href='/saved'>
                                     <TurnedInIcon />
                                 </IconButton>
                             </Tooltip>

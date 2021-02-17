@@ -7,4 +7,5 @@ urlpatterns = [
     path('search/<str:q>/', index, name='search_result_page'),
     path('signin/', index, name='sign_in_page'),
     path('signup/', index, name='sign_up_page'),
+    path('saved/', index, name='saved_recipe_page'),
 ]

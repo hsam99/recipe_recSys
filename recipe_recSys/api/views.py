@@ -8,8 +8,16 @@ from nltk.corpus import stopwords
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from .apps import RecipeSearchConfig
-from .models import (RecipeDetails, RecipeEmbeddings, RecipeRating)
-from .serializers import (RecipeDetailSerializer, RecipeDisplaySerializer, LoginSerializer, SignUpSerializer, RecipeRatingSerializer, RecipeSaveSerializer)
+from .models import (RecipeDetails, RecipeEmbeddings, RecipeRating, RecipeSave)
+from .serializers import (
+    RecipeDetailSerializer,
+    RecipeDisplaySerializer,
+    LoginSerializer,
+    SignUpSerializer,
+    RecipeRatingSerializer,
+    RecipeSaveSerializer,
+    ViewSavedRecipeSerializer
+)
 import time
 from rest_framework import generics, status, permissions
 from django.contrib.auth import authenticate, login, logout
@@ -138,6 +146,21 @@ def recipe_save_view(request):
         recipe.saved.add(user)
 
     return JsonResponse({'detail': 'Save updated'})
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_saved_recipe(request):
+    saved_recipe_id = []
+    user = request.user
+    saved_recipes = RecipeSave.objects.filter(user=user).values('recipe')
+    for recipe in saved_recipes:
+        saved_recipe_id.append(recipe['recipe'])
+        
+    recipe_objects = RecipeDetails.objects.filter(index__in=saved_recipe_id)
+    recipe_det_serializer = RecipeDisplaySerializer(recipe_objects, many=True)
+    return Response(recipe_det_serializer.data, status=status.HTTP_200_OK)
+
 
 def vectorize_query(query):
     stop_words = set(stopwords.words('english'))

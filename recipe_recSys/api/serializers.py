@@ -1,6 +1,6 @@
 from rest_framework import serializers
 import ast
-from .models import RecipeDetails, RecipeRating
+from .models import RecipeDetails, RecipeRating, RecipeSave
 from django.contrib.auth.models import User
 import django.contrib.auth.password_validation as validators
 
@@ -96,3 +96,9 @@ class RecipeRatingSerializer(serializers.Serializer):
 class RecipeSaveSerializer(serializers.Serializer):
     recipe_idx = serializers.IntegerField(required=True)
     save    = serializers.BooleanField(required=True)
+
+
+class ViewSavedRecipeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RecipeSave
+        fields = [('recipe')]

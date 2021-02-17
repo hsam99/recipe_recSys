@@ -5,6 +5,7 @@ import SearchResultPage from "./pages/SearchResultPage";
 import RecipeDetailPage from "./pages/RecipeDetailPage";
 import SignInPage from './pages/SignInPage';
 import SignUpPage from './pages/SignUpPage';
+import SavedRecipePage from './pages/SavedRecipePage';
 import { BrowserRouter as Router, Switch, Route, Link, Redirect } from "react-router-dom"
 import axios from "axios";
 
@@ -61,6 +62,7 @@ const App = () => {
               <PrivateRoute path='/' exact component={HomePage}  />
               <PrivateRoute path='/search/:q' component={SearchResultPage}  />
               <PrivateRoute path='/recipe/:idx' component={RecipeDetailPage}  />
+              <PrivateRoute path='/saved' component={SavedRecipePage}  />
             </Switch>
           </Router>
       </div>
