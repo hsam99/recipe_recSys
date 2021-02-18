@@ -36,6 +36,7 @@ class RecipeDetails(models.Model):
     instructions = models.TextField(blank=True, null=True)
     rating = models.ManyToManyField(User, related_name='user_rating', blank=True, through=RecipeRating)
     saved = models.ManyToManyField(User, related_name='user_saved', blank=True, through=RecipeSave)
+    healthiness_label = models.TextField(blank=True, null=True)
 
     class Meta:
         managed = True

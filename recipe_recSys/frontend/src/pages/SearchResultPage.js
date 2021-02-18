@@ -17,10 +17,11 @@ import GridList from '@material-ui/core/GridList';
 import GridListTile from '@material-ui/core/GridListTile';
 import GridListTileBar from '@material-ui/core/GridListTileBar';
 import ListSubheader from '@material-ui/core/ListSubheader';
-import { Divider } from "@material-ui/core";
+import { Button, Divider, Icon } from "@material-ui/core";
 import StarBorderIcon from '@material-ui/icons/StarBorder';
 import IconButton from '@material-ui/core/IconButton';
 import axios from 'axios';
+import CheckCircleOutlineIcon from '@material-ui/icons/CheckCircleOutline';
 
 
 const useStyles = makeStyles((theme) => ({
@@ -49,6 +50,32 @@ const useStyles = makeStyles((theme) => ({
     }
   }));
 
+const compare = (a, b) => {
+  const label_a = a.healthiness_label;
+  const label_b = b.healthiness_label;
+  let label_a_count = 0;
+  let label_b_count = 0;
+
+  for (let i=0; i<label_a.length; i++){
+    if (label_a[i][0] == 1){
+      label_a_count++;
+    }
+    if (label_b[i][0] == 1){
+      label_b_count++;
+    }
+  }
+
+  if (label_a_count < label_b_count){
+    return 1
+  }
+
+  if (label_a_count > label_b_count){
+    return -1
+  }
+
+  return 0
+}
+
 const SearchResultComponent = (query) => {
     const classes = useStyles();
     const [loading, setLoading] = useState(true);
@@ -58,6 +85,7 @@ const SearchResultComponent = (query) => {
     if (loading) {
       axios.get(`/api/search/${query}/`)
       .then((response) => {
+        console.log(response.data)
         setLoading(false)
         setResult(response.data)
       }, (error) => {
@@ -108,6 +136,9 @@ const SearchResultComponent = (query) => {
       )
     }
     else {
+      searchResult.sort((a, b) => { 
+        return -(a.count - b.count);
+    })
       return (
           <div>
               <AppTopBar />
@@ -120,7 +151,9 @@ const SearchResultComponent = (query) => {
                       <Link to={`/recipe/${tile.index}/`}>
                       <GridListTileBar
                               title={tile.title}
-                              subtitle={'4.5 rating'}
+                              subtitle={tile.count > 2 
+                              ?<div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', color: '#7FFF00', }}><CheckCircleOutlineIcon fontSize="small" /><span> Healthier Choice</span></div>
+                              : ''}
                               classes={{
                                   root: classes.titleBar,
                                   subtitle: classes.subtitle,

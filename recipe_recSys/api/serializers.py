@@ -36,13 +36,14 @@ class RecipeDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = RecipeDetails
-        fields = ['index', 'title', 'images', 'ingredients', 'instructions', 'rating', 'avg_rating', 'rating_count', 'saved']
+        fields = ['index', 'title', 'images', 'ingredients', 'instructions', 'rating', 'avg_rating', 'rating_count', 'saved', 'healthiness_label']
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data['images'] = ast.literal_eval(data['images'])
         data['ingredients'] = ast.literal_eval(data['ingredients'])
         data['instructions'] = ast.literal_eval(data['instructions'])
+        data['healthiness_label'] = ast.literal_eval(data['healthiness_label'])
         return data
 
     def get_rating(self, obj):
@@ -77,15 +78,30 @@ class RecipeDetailSerializer(serializers.ModelSerializer):
 
 
 class RecipeDisplaySerializer(serializers.ModelSerializer):
+    count = serializers.SerializerMethodField()
 
     class Meta:
         model = RecipeDetails
-        fields = ['index', 'title', 'images']
+        fields = ['index', 'title', 'images', 'healthiness_label', 'count']
+        ordering = ['count']
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data['images'] = ast.literal_eval(data['images'])
+        data['healthiness_label'] = ast.literal_eval(data['healthiness_label'])
         return data
+
+    def get_count(self, obj):
+        healthiness_label = obj.healthiness_label
+        healthiness_label = ast.literal_eval(healthiness_label)
+        green_count = 0
+        for label in healthiness_label:
+            if label[0] == 1:
+                green_count += 1
+            else:
+                pass
+
+        return green_count
 
 
 class RecipeRatingSerializer(serializers.Serializer):
