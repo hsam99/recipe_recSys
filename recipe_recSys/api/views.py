@@ -8,7 +8,7 @@ from nltk.corpus import stopwords
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from .apps import RecipeSearchConfig
-from .models import (RecipeDetails, RecipeEmbeddings, RecipeRating, RecipeSave)
+from .models import (RecipeDetails, RecipeEmbeddings, RecipeRating, RecipeSave, UserProfile)
 from .serializers import (
     RecipeDetailSerializer,
     RecipeDisplaySerializer,
@@ -118,14 +118,18 @@ def recipe_rating_view(request):
             update_recipe = RecipeRating.objects.get(recipe=recipe, user=user)
             update_recipe.rating = rating
             update_recipe.save()
-        return JsonResponse({'detail': 'Rating updated'})
     else:
         if rating == 0:
             pass
         else:
             RecipeRating.objects.create(recipe=recipe, user=user, rating=rating)
 
-    return JsonResponse({'detail': 'Recipe rated'})
+    if UserProfile.objects.filter(user=user).exists():
+        prototype_vector(user, 1) # update prototype vector
+    else:
+        prototype_vector(user, 0) # create prototype vector
+
+    return JsonResponse({'detail': 'Rating updated'})
 
 
 @api_view(['POST'])
@@ -160,6 +164,33 @@ def get_saved_recipe(request):
     recipe_objects = RecipeDetails.objects.filter(index__in=saved_recipe_id)
     recipe_det_serializer = RecipeDisplaySerializer(recipe_objects, many=True)
     return Response(recipe_det_serializer.data, status=status.HTTP_200_OK)
+
+
+def prototype_vector(user, flag):
+    positive_rating_threshold = 3
+    all_positive_recipe = list(RecipeRating.objects.filter(user=user, rating__gte=positive_rating_threshold).values_list('recipe', 'rating'))
+    all_negative_recipe = list(RecipeRating.objects.filter(user=user, rating__lt=positive_rating_threshold).values_list('recipe', 'rating'))
+    positive_prototype = np.zeros((1,100))
+    negative_prototype = np.zeros((1,100))
+
+    if len(all_positive_recipe) != 0:
+        for recipe in all_positive_recipe:
+            positive_prototype = positive_prototype + (np.array(ast.literal_eval(RecipeEmbeddings.objects.get(index=recipe[0]).weighted_ingr_vec)) * int(recipe[1] - 2))
+
+    if len(all_negative_recipe) != 0:    
+        for recipe in all_negative_recipe:
+            negative_prototype = negative_prototype + (np.array(ast.literal_eval(RecipeEmbeddings.objects.get(index=recipe[0]).weighted_ingr_vec)) * int(2/recipe[1]))
+
+    prototype_vector = positive_prototype - negative_prototype
+    if flag == 0:
+        print(0)
+        UserProfile.objects.create(user=user, prototype_vector=prototype_vector) 
+
+    elif flag == 1:
+        print(1)
+        target_user = UserProfile.objects.get(user=user)
+        target_user.prototype_vector = prototype_vector
+        target_user.save()
 
 
 def vectorize_query(query):

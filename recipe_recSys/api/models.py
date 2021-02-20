@@ -12,6 +12,10 @@ import random
 User = settings.AUTH_USER_MODEL
 
 
+class UserProfile(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    prototype_vector = models.TextField(blank=True, null=True)
+
 class RecipeRating(models.Model):
     recipe = models.ForeignKey('RecipeDetails', on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
