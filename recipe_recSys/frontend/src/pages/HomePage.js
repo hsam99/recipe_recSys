@@ -20,39 +20,118 @@ import ListSubheader from '@material-ui/core/ListSubheader';
 import { Divider } from "@material-ui/core";
 import StarBorderIcon from '@material-ui/icons/StarBorder';
 import IconButton from '@material-ui/core/IconButton';
-import SignInPage from './SignInPage';
-import SignUpPage from './SignUpPage';
+import axios from 'axios';
 
 const useStyles = makeStyles((theme) => ({
-    root: {
-      overflow: 'hidden',
-    },
-    container: {
-      backgroundColor: 'whitesmoke',
-      height: '100%',
-    },
-    tile: {
-      marginBottom: 15,
-    },
-    title: {
-      padding: theme.spacing(4, 0, 2, 0),
-    },
-    overlay : {
-      height: '100vh',
-    }
-  }));
+  root: {
+    overflow: 'hidden',
+  },
+  container: {
+    backgroundColor: 'whitesmoke',
+    height: '100%',
+    width: '100%',
+    marginTop: 35,
+    marginBottom: 50,
+  },
+  tile: {
+    marginBottom: 15,
+  },
+  title: {
+    padding: theme.spacing(4, 0, 2, 0),
+  },
+  overlay : {
+    height: '100vh',
+
+  },
+  subtitle: {
+    paddingBottom: 1 
+  }
+}));
 
 const HomePage = () => {
     const classes = useStyles();
+    const [loading, setLoading] = useState(true);
+    const [recipes, setRecipes] = useState([]);
 
-  
-      return (
-        <div>
-          <AppTopBar />
-        </div>
+    useEffect(() => {
+        axios.get('/api/auto_recommendation/')
+        .then((response) => {
+            console.log(response.data)
+        setRecipes(response.data);
+        setLoading(false);
+        }, (error) => {
+        console.log(error);
+        });
+      }, []);
 
-      )
+      if (loading){
+        return (
+          <div>
+            <AppTopBar />
+            <Container fixed >
+              <div className={classes.overlay}>
+                <LoadingOverlay
+                  active={true}
+                  spinner
+                  text='Loading recipes...'
+                  className={classes.overlay}
+                  styles={{
+                    content: (base) => ({
+                      ...base,
+                      color: 'black',
+                      fontFamily: 'Arial'
+                    }),
+                    overlay: (base) => ({
+                      ...base,
+                      background: 'rgba(255, 255, 255, 0.5)'
+                    }),
+                    spinner: (base) => ({
+                      ...base,
+                      width: '100px',
+                      '& svg circle': {
+                        stroke: 'rgba(0, 0, 0, 0.5)'
+                      }
+                    }),
+                    
+                  }}
+                  >
+                </LoadingOverlay>
+              </div>
+            </Container>
+          </div>
+        )
+    } else {
+        return (
+          <div>
+            <AppTopBar />
+              <Container fixed className={classes.container}>
+                <Typography variant='h4' className={classes.title}> {recipes.length} Results</Typography>
+                <GridList cellHeight={300} cols={3} spacing={10}>
+                  {recipes.map((tile) => (
+                    <GridListTile className={classes.tile} key={tile.images[0]['id']}>
+                      <img src={tile.images[0]['url']} alt={tile.title} />
+                      <Link to={`/recipe/${tile.index}/`}>
+                      <GridListTileBar
+                              title={tile.title}
+                              subtitle={'4.5 rating'}
+                              classes={{
+                                  root: classes.titleBar,
+                                  subtitle: classes.subtitle,
+                              }}
+                              // actionIcon={
+                              //     <IconButton aria-label={`star ${tile.title}`}>
+                              //         <StarBorderIcon className={classes.title} />
+                              //     </IconButton>
+                              // }
+                          />
+                        </Link>
+                    </GridListTile>
+                  ))}
+                </GridList>
+              </Container>
+          </div>
+        )
     }
-
+}
 
 export default HomePage

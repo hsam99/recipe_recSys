@@ -19,7 +19,7 @@ const useStyles = makeStyles((theme) => ({
       justifyContent: 'space-around',
       overflow: 'hidden',
       paddingInline: theme.spacing(2),
-      backgroundColor: theme.palette.background.paper,
+      backgroundColor: 'whitesmoke',
     },
     gridList: {
       flexWrap: 'nowrap',
@@ -27,43 +27,36 @@ const useStyles = makeStyles((theme) => ({
       transform: 'translateZ(0)',
     },
     title: {
-      color: '#ce93d8',
+      color: 'white',
     },
     titleBar: {
-      background:
-        'linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 70%, rgba(0,0,0,0) 100%)',
-    },
+    }
   }));
 
-const RecipeList = ({ searchResult }) => {
+const RecipeList = () => {
     const classes = useStyles();
     const tileData = [
-        {title: 'Crunchy Potato Onion Bake', img: 'http://img.sndimg.com/food/image/upload/w_512,h_512,c_fit,fl_progressive,q_95/v1/img/recipes/47/91/49/picX9CNE2.jpg'},
-    {title: 'Crunchy Potato Onion Bake', img: 'http://img.sndimg.com/food/image/upload/w_512,h_512,c_fit,fl_progressive,q_95/v1/img/recipes/47/91/49/picX9CNE2.jpg'},
-    {title: 'Crunchy Potato Onion Bake', img: 'http://img.sndimg.com/food/image/upload/w_512,h_512,c_fit,fl_progressive,q_95/v1/img/recipes/47/91/49/picX9CNE2.jpg'},
-    {title: 'Crunchy Potato Onion Bake', img: 'http://img.sndimg.com/food/image/upload/w_512,h_512,c_fit,fl_progressive,q_95/v1/img/recipes/47/91/49/picX9CNE2.jpg'},
-    {title: 'Crunchy Potato Onion Bake', img: 'http://img.sndimg.com/food/image/upload/w_512,h_512,c_fit,fl_progressive,q_95/v1/img/recipes/47/91/49/picX9CNE2.jpg'},
-    {title: 'Crunchy Potato Onion Bake', img: 'http://img.sndimg.com/food/image/upload/w_512,h_512,c_fit,fl_progressive,q_95/v1/img/recipes/47/91/49/picX9CNE2.jpg'}]
+        {title: 'Crunchy ', images: 'https://img.sndimg.com/food/image/upload/w_512,h_512,c_fit,fl_progressive,q_95/v1/img/recipes/42/17/00/Tk9s8CDkRfiDwgxeoFR6_ConsiderationBKExoticfriedrice.jpg'},
+    {title: 'Crunchy Potato Onion Bake', images: 'http://img.sndimg.com/food/image/upload/w_512,h_512,c_fit,fl_progressive,q_95/v1/img/recipes/47/91/49/picX9CNE2.jpg'},
+    {title: 'Crunchy Potato Onion Bake', images: 'http://img.sndimg.com/food/image/upload/w_512,h_512,c_fit,fl_progressive,q_95/v1/img/recipes/47/91/49/picX9CNE2.jpg'},
+    {title: 'Crunchy Potato Onion Bake', images: 'http://img.sndimg.com/food/image/upload/w_512,h_512,c_fit,fl_progressive,q_95/v1/img/recipes/47/91/49/picX9CNE2.jpg'},
+    {title: 'Crunchy Potato Onion Bake', images: 'http://img.sndimg.com/food/image/upload/w_512,h_512,c_fit,fl_progressive,q_95/v1/img/recipes/47/91/49/picX9CNE2.jpg'},
+    {title: 'Crunchy Potato Onion Bake', images: 'http://img.sndimg.com/food/image/upload/w_512,h_512,c_fit,fl_progressive,q_95/v1/img/recipes/47/91/49/picX9CNE2.jpg'}]
     
     return(
         <div>
-            <Typography variant="h6" className={classes.header}>Recipes similar to <a href='/'>LINK</a></Typography>
+            <Typography variant="h5" className={classes.header}>Recipes similar to <a href='/'>LINK</a></Typography>
             <div className={classes.root}>
-                <GridList className={classes.gridList} cols={5} cellHeight={200} spacing={10}>
-                    {searchResult.map((tile) => (
-                        <GridListTile key={tile.images[0]['id']}>
-                            <img src={tile.images[0]['url']} alt={tile.title} />
+                <GridList className={classes.gridList} cols={3.5} cellHeight={300} spacing={10}>
+                    {tileData.map((tile) => (
+                        <GridListTile key={tile.images}>
+                            <img src={tile.images} alt={tile.title} />
                         <GridListTileBar
                             title={tile.title}
                             classes={{
                                 root: classes.titleBar,
                                 title: classes.title,
                             }}
-                            actionIcon={
-                                <IconButton aria-label={`star ${tile.title}`}>
-                                    <StarBorderIcon className={classes.title} />
-                                </IconButton>
-                            }
                         />
                         </GridListTile>
                     ))}

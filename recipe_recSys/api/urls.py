@@ -9,7 +9,8 @@ from .views import (
     get_recipe_detail,
     recipe_rating_view,
     recipe_save_view,
-    get_saved_recipe
+    get_saved_recipe,
+    automatic_recommendation_view
 )
 
 urlpatterns = [
@@ -21,5 +22,6 @@ urlpatterns = [
     path('recipe/<int:idx>/', get_recipe_detail, name='recipe-det'),
     path('rate/', recipe_rating_view, name='rate-recipe'),
     path('save/', recipe_save_view, name='save-recipe'),
-    path('view_saved/', get_saved_recipe, name='viewed-saved-recipe')
+    path('view_saved/', get_saved_recipe, name='viewed-saved-recipe'),
+    path('auto_recommendation/', automatic_recommendation_view, name='auto-recommendation')
 ]

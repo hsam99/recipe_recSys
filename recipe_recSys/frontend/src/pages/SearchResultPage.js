@@ -179,7 +179,7 @@ const SearchResultPage = (props) => {
   
   return(
     <div>
-      {props.match.params.q ? SearchResultComponent(props.match.params.q) : <p>fucking error</p>}
+      {props.match.params.q ? SearchResultComponent(props.match.params.q) : <p>error</p>}
     </div>
   )
 }

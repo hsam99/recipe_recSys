@@ -16,7 +16,7 @@ from .serializers import (
     SignUpSerializer,
     RecipeRatingSerializer,
     RecipeSaveSerializer,
-    ViewSavedRecipeSerializer
+    ViewSavedRecipeSerializer,
 )
 import time
 from rest_framework import generics, status, permissions
@@ -83,10 +83,22 @@ def recipe_query(request, q):
     # else:
     #     return Response('Invalid query')
     query_vec = vectorize_query(q)
-    top_n_recipes = compute_similarity(query_vec)
+    # query_vec = np.array(ast.literal_eval(UserProfile.objects.get(user=request.user).prototype_vector))
+    top_n_recipes, similarity_list = compute_similarity(query_vec)
 
     recipe_objects = RecipeDetails.objects.filter(index__in=top_n_recipes)
-    recipe_det_serializer = RecipeDisplaySerializer(recipe_objects, many=True)
+    recipe_det_serializer = RecipeDisplaySerializer(recipe_objects, context={'similarity': similarity_list}, many=True)
+    return Response(recipe_det_serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def automatic_recommendation_view(request):
+    prototype_vector = ast.literal_eval(UserProfile.objects.get(user=request.user).prototype_vector)
+    top_n_recipes, similarity_list = compute_similarity(prototype_vector)
+
+    recipe_objects = RecipeDetails.objects.filter(index__in=top_n_recipes)
+    recipe_det_serializer = RecipeDisplaySerializer(recipe_objects, context={'similarity': similarity_list}, many=True)
     return Response(recipe_det_serializer.data, status=status.HTTP_200_OK)
 
 
@@ -180,8 +192,11 @@ def prototype_vector(user, flag):
     if len(all_negative_recipe) != 0:    
         for recipe in all_negative_recipe:
             negative_prototype = negative_prototype + (np.array(ast.literal_eval(RecipeEmbeddings.objects.get(index=recipe[0]).weighted_ingr_vec)) * int(2/recipe[1]))
-
-    prototype_vector = positive_prototype - negative_prototype
+    
+    positive_prototype = positive_prototype / len(all_positive_recipe)
+    negative_prototype = negative_prototype / len(all_negative_recipe)
+    
+    prototype_vector = np.array2string(0.85*positive_prototype - 0.5*negative_prototype, separator=', ')
     if flag == 0:
         print(0)
         UserProfile.objects.create(user=user, prototype_vector=prototype_vector) 
@@ -216,51 +231,51 @@ def vectorize_query(query):
     return query_vec
 
 
-def compute_similarity(query_vec):
-    n = 20
-    final_results = []
-    random_index = random.sample(range(1, 402324), 402323)
-    a = time.time()
-    for num in range(10):
-        index = random_index[num*2000:(num+1)*2000]
-        recipes = RecipeEmbeddings.objects.filter(index__in=index).values_list('index', 'weighted_title_vec')
-        similarity_list = []
-        start_time = time.time()
-        for idx, title_vec in recipes:
-            if title_vec is None:
-                similarity = 0
-            else:
-                similarity = cosine_similarity(query_vec, np.array(ast.literal_eval(title_vec))).item()
-            similarity_list.append((idx, similarity))
-        elapsed_time = time.time() - start_time
-        print('Elapsed_time: {}'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
-        similarity_list = sorted(similarity_list, key=lambda x: x[1], reverse=True)
-        top_recipes = [recipe[0] for recipe in similarity_list if recipe[1] > 0.80 * (0.97**num)] # above threshold
-        # top_recipes = [recipe[0] for recipe in similarity_list[0:n]] # top n recipes
-        final_results.extend(top_recipes)
-        print(final_results)
-        if len(final_results) > n:
-            break
-    elapsed_time = time.time() - a
-    print('Elapsed_time: {}'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
-    return final_results
-
-
 # def compute_similarity(query_vec):
 #     n = 20
-#     recipes = RecipeEmbeddings.objects.values_list('index', 'weighted_title_vec').order_by('?')[:10000]
-#     similarity_list = []
-#     start_time = time.time()
-#     for idx, title_vec in recipes:
-#         if title_vec is None:
-#             similarity = 0
-#         else:
-#             similarity = cosine_similarity(query_vec, np.array(ast.literal_eval(title_vec))).item()
-#         similarity_list.append((idx, similarity))
-#     elapsed_time = time.time() - start_time
+#     final_results = []
+#     random_index = random.sample(range(1, 402324), 402323)
+#     a = time.time()
+#     for num in range(10):
+#         index = random_index[num*2000:(num+1)*2000]
+#         recipes = RecipeEmbeddings.objects.filter(index__in=index).values_list('index', 'weighted_title_vec')
+#         similarity_list = []
+#         start_time = time.time()
+#         for idx, title_vec in recipes:
+#             if title_vec is None:
+#                 similarity = 0
+#             else:
+#                 similarity = cosine_similarity(query_vec, np.array(ast.literal_eval(title_vec))).item()
+#             similarity_list.append((idx, similarity))
+#         elapsed_time = time.time() - start_time
+#         print('Elapsed_time: {}'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
+#         similarity_list = sorted(similarity_list, key=lambda x: x[1], reverse=True)
+#         top_recipes = [recipe[0] for recipe in similarity_list if recipe[1] > 0.80 * (0.97**num)] # above threshold
+#         # top_recipes = [recipe[0] for recipe in similarity_list[0:n]] # top n recipes
+#         final_results.extend(top_recipes)
+#         print(final_results)
+#         if len(final_results) > n:
+#             break
+#     elapsed_time = time.time() - a
 #     print('Elapsed_time: {}'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
-#     similarity_list = sorted(similarity_list, key=lambda x: x[1], reverse=True)
-#     top_n_recipes = [recipe[0] for recipe in similarity_list[0:n]]
-#     print(similarity_list[0:50])
+#     return final_results
 
-#     return top_n_recipes
+
+def compute_similarity(query_vec):
+    n = 50
+    recipes = RecipeEmbeddings.objects.values_list('index', 'weighted_title_vec')[:5000]
+    similarity_list = []
+    start_time = time.time()
+    for idx, title_vec in recipes:
+        if title_vec is None:
+            similarity = 0
+        else:
+            similarity = cosine_similarity(query_vec, np.array(ast.literal_eval(title_vec))).item()
+        similarity_list.append((idx, similarity))
+    elapsed_time = time.time() - start_time
+    print('Elapsed_time: {}'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
+    similarity_list = sorted(similarity_list, key=lambda x: x[1], reverse=True)
+    top_n_recipes = [recipe[0] for recipe in similarity_list[0:n]]
+    print(similarity_list[0:50])
+
+    return top_n_recipes, similarity_list[0:n]

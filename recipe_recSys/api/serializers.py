@@ -79,10 +79,11 @@ class RecipeDetailSerializer(serializers.ModelSerializer):
 
 class RecipeDisplaySerializer(serializers.ModelSerializer):
     count = serializers.SerializerMethodField()
+    similarity = serializers.SerializerMethodField()
 
     class Meta:
         model = RecipeDetails
-        fields = ['index', 'title', 'images', 'healthiness_label', 'count']
+        fields = ['index', 'title', 'images', 'healthiness_label', 'count', 'similarity']
         ordering = ['count']
 
     def to_representation(self, instance):
@@ -102,6 +103,13 @@ class RecipeDisplaySerializer(serializers.ModelSerializer):
                 pass
 
         return green_count
+
+    def get_similarity(self, obj): 
+        obj_idx = obj.index
+        similarity_list = self.context['similarity']
+        similarity_score = next((v[1] for v in similarity_list if v[0] == obj_idx), None)
+
+        return similarity_score
 
 
 class RecipeRatingSerializer(serializers.Serializer):
