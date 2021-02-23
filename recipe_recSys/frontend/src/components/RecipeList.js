@@ -8,17 +8,17 @@ import { Divider } from "@material-ui/core";
 import StarBorderIcon from '@material-ui/icons/StarBorder';
 import IconButton from '@material-ui/core/IconButton';
 import Typography from '@material-ui/core/Typography';
+import { Link } from 'react-router-dom';
 
 const useStyles = makeStyles((theme) => ({
     header: {
-        padding: theme.spacing(2),
+        paddingBlock: theme.spacing(2),
         marginTop: theme.spacing(1),
     },
     root: {
       display: 'flex',
       justifyContent: 'space-around',
       overflow: 'hidden',
-      paddingInline: theme.spacing(2),
       backgroundColor: 'whitesmoke',
     },
     gridList: {
@@ -30,27 +30,33 @@ const useStyles = makeStyles((theme) => ({
       color: 'white',
     },
     titleBar: {
+    },
+    listComponent: {
+        marginBottom: 50,
     }
   }));
 
-const RecipeList = () => {
+const formatString = (str, index) => {
+    const split_str = str.split(/[:;]/);
+
+    return(
+        <span>{split_str[0]} <Link to={`/recipe/${index}/`}> {split_str[1]} </Link> {split_str[2]}</span>
+    )
+}
+
+const RecipeList = (props) => {
     const classes = useStyles();
-    const tileData = [
-        {title: 'Crunchy ', images: 'https://img.sndimg.com/food/image/upload/w_512,h_512,c_fit,fl_progressive,q_95/v1/img/recipes/42/17/00/Tk9s8CDkRfiDwgxeoFR6_ConsiderationBKExoticfriedrice.jpg'},
-    {title: 'Crunchy Potato Onion Bake', images: 'http://img.sndimg.com/food/image/upload/w_512,h_512,c_fit,fl_progressive,q_95/v1/img/recipes/47/91/49/picX9CNE2.jpg'},
-    {title: 'Crunchy Potato Onion Bake', images: 'http://img.sndimg.com/food/image/upload/w_512,h_512,c_fit,fl_progressive,q_95/v1/img/recipes/47/91/49/picX9CNE2.jpg'},
-    {title: 'Crunchy Potato Onion Bake', images: 'http://img.sndimg.com/food/image/upload/w_512,h_512,c_fit,fl_progressive,q_95/v1/img/recipes/47/91/49/picX9CNE2.jpg'},
-    {title: 'Crunchy Potato Onion Bake', images: 'http://img.sndimg.com/food/image/upload/w_512,h_512,c_fit,fl_progressive,q_95/v1/img/recipes/47/91/49/picX9CNE2.jpg'},
-    {title: 'Crunchy Potato Onion Bake', images: 'http://img.sndimg.com/food/image/upload/w_512,h_512,c_fit,fl_progressive,q_95/v1/img/recipes/47/91/49/picX9CNE2.jpg'}]
+    const tileData = props.data;
     
     return(
-        <div>
-            <Typography variant="h5" className={classes.header}>Recipes similar to <a href='/'>LINK</a></Typography>
+        <div className={classes.listComponent}>
+            <Typography variant="h5" className={classes.header}>{tileData.link===true? formatString(tileData.explanation, tileData.index) : tileData.explanation}</Typography>
             <div className={classes.root}>
-                <GridList className={classes.gridList} cols={3.5} cellHeight={300} spacing={10}>
-                    {tileData.map((tile) => (
-                        <GridListTile key={tile.images}>
-                            <img src={tile.images} alt={tile.title} />
+                <GridList className={classes.gridList} cols={3.5} cellHeight={300} spacing={5}>
+                    {tileData.recipes.map((tile) => (
+                        <GridListTile key={tile.images[0]['id']}>
+                            <img src={tile.images[0]['url']} alt={tile.title} />
+                        <Link to={`/recipe/${tile.index}/`}>
                         <GridListTileBar
                             title={tile.title}
                             classes={{
@@ -58,6 +64,7 @@ const RecipeList = () => {
                                 title: classes.title,
                             }}
                         />
+                        </Link>
                         </GridListTile>
                     ))}
                 </GridList>

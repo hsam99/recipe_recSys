@@ -84,7 +84,7 @@ def recipe_query(request, q):
     #     return Response('Invalid query')
     query_vec = vectorize_query(q)
     # query_vec = np.array(ast.literal_eval(UserProfile.objects.get(user=request.user).prototype_vector))
-    top_n_recipes, similarity_list = compute_similarity(query_vec)
+    top_n_recipes, similarity_list = compute_similarity(query_vec, 1)
 
     recipe_objects = RecipeDetails.objects.filter(index__in=top_n_recipes)
     recipe_det_serializer = RecipeDisplaySerializer(recipe_objects, context={'similarity': similarity_list}, many=True)
@@ -94,12 +94,19 @@ def recipe_query(request, q):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def automatic_recommendation_view(request):
-    prototype_vector = ast.literal_eval(UserProfile.objects.get(user=request.user).prototype_vector)
-    top_n_recipes, similarity_list = compute_similarity(prototype_vector)
+    user = request.user
+    prototype_vector = ast.literal_eval(UserProfile.objects.get(user=user).prototype_vector)
+    recipe_recipe_recommendation = find_similar_recipes(user)
+    top_n_recipes, similarity_list = compute_similarity(prototype_vector, 0)
 
     recipe_objects = RecipeDetails.objects.filter(index__in=top_n_recipes)
     recipe_det_serializer = RecipeDisplaySerializer(recipe_objects, context={'similarity': similarity_list}, many=True)
-    return Response(recipe_det_serializer.data, status=status.HTTP_200_OK)
+    return JsonResponse(
+        [{'explanation': 'test', 'recipes': recipe_det_serializer.data, 'index': None, 'link': False}, 
+        recipe_recipe_recommendation], 
+        status=status.HTTP_200_OK, 
+        safe=False
+    )
 
 
 @api_view(['GET'])
@@ -261,9 +268,13 @@ def vectorize_query(query):
 #     return final_results
 
 
-def compute_similarity(query_vec):
-    n = 50
-    recipes = RecipeEmbeddings.objects.values_list('index', 'weighted_title_vec')[:5000]
+def compute_similarity(query_vec, query):
+    if query == 1:
+        n = 50
+        recipes = RecipeEmbeddings.objects.values_list('index', 'weighted_title_vec')[:5000]
+    elif query == 0:
+        n = 10
+        recipes = RecipeEmbeddings.objects.values_list('index', 'weighted_ingr_vec').order_by('?')[:5000]
     similarity_list = []
     start_time = time.time()
     for idx, title_vec in recipes:
@@ -279,3 +290,23 @@ def compute_similarity(query_vec):
     print(similarity_list[0:50])
 
     return top_n_recipes, similarity_list[0:n]
+
+
+def find_similar_recipes(user):
+    highly_rated_recipe = RecipeRating.objects.filter(user=user, rating__gte=3).order_by('?')[0]
+    recipe_rating = highly_rated_recipe.rating
+    recipe_title = highly_rated_recipe.recipe.title
+    recipe_idx = highly_rated_recipe.recipe.index
+    recipe_embedding = ast.literal_eval(RecipeEmbeddings.objects.get(index=recipe_idx).weighted_ingr_vec)
+
+    top_n_recipes, similarity_list = compute_similarity(recipe_embedding, 0)
+    recipe_objects = RecipeDetails.objects.filter(index__in=top_n_recipes)
+    recipe_det_serializer = RecipeDisplaySerializer(recipe_objects, context={'similarity': similarity_list}, many=True)
+
+    return({
+        'explanation': 'Recipes similar to :{};, which you have rated {}'.format(recipe_title, recipe_rating), 
+        'recipes': recipe_det_serializer.data,
+        'index': recipe_idx,
+        'link': True
+    })
+

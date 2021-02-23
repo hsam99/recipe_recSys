@@ -102,7 +102,6 @@ const SavedRecipePage = () => {
                         <Link to={`/recipe/${tile.index}/`}>
                         <GridListTileBar
                                 title={tile.title}
-                                subtitle={'4.5 rating'}
                                 classes={{
                                     root: classes.titleBar,
                                     subtitle: classes.subtitle,

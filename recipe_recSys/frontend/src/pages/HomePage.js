@@ -32,6 +32,8 @@ const useStyles = makeStyles((theme) => ({
     width: '100%',
     marginTop: 35,
     marginBottom: 50,
+    paddingBottom: 25,
+    paddingTop: 5,
   },
   tile: {
     marginBottom: 15,
@@ -52,6 +54,20 @@ const HomePage = () => {
     const classes = useStyles();
     const [loading, setLoading] = useState(true);
     const [recipes, setRecipes] = useState([]);
+//     const tileData = [{'explanation':'KariLembu', 'recipes':[
+//       {title: 'Crunchy ', images: 'https://img.sndimg.com/food/image/upload/w_512,h_512,c_fit,fl_progressive,q_95/v1/img/recipes/42/17/00/Tk9s8CDkRfiDwgxeoFR6_ConsiderationBKExoticfriedrice.jpg'},
+//   {title: 'Crunchy Potato Onion Bake', images: 'http://img.sndimg.com/food/image/upload/w_512,h_512,c_fit,fl_progressive,q_95/v1/img/recipes/47/91/49/picX9CNE2.jpg'},
+//   {title: 'Crunchy Potato Onion Bake', images: 'http://img.sndimg.com/food/image/upload/w_512,h_512,c_fit,fl_progressive,q_95/v1/img/recipes/47/91/49/picX9CNE2.jpg'},
+//   {title: 'Crunchy Potato Onion Bake', images: 'http://img.sndimg.com/food/image/upload/w_512,h_512,c_fit,fl_progressive,q_95/v1/img/recipes/47/91/49/picX9CNE2.jpg'},
+//   {title: 'Crunchy Potato Onion Bake', images: 'http://img.sndimg.com/food/image/upload/w_512,h_512,c_fit,fl_progressive,q_95/v1/img/recipes/47/91/49/picX9CNE2.jpg'},
+//   {title: 'Crunchy Potato Onion Bake', images: 'http://img.sndimg.com/food/image/upload/w_512,h_512,c_fit,fl_progressive,q_95/v1/img/recipes/47/91/49/picX9CNE2.jpg'}]},
+//   {'explanation':'KariLembu2', 'recipes':[
+//     {title: 'Crunchy ', images: 'https://img.sndimg.com/food/image/upload/w_512,h_512,c_fit,fl_progressive,q_95/v1/img/recipes/42/17/00/Tk9s8CDkRfiDwgxeoFR6_ConsiderationBKExoticfriedrice.jpg'},
+// {title: 'Crunchy Potato Onion Bake', images: 'http://img.sndimg.com/food/image/upload/w_512,h_512,c_fit,fl_progressive,q_95/v1/img/recipes/47/91/49/picX9CNE2.jpg'},
+// {title: 'Crunchy Potato Onion Bake', images: 'http://img.sndimg.com/food/image/upload/w_512,h_512,c_fit,fl_progressive,q_95/v1/img/recipes/47/91/49/picX9CNE2.jpg'},
+// {title: 'Crunchy Potato Onion Bake', images: 'http://img.sndimg.com/food/image/upload/w_512,h_512,c_fit,fl_progressive,q_95/v1/img/recipes/47/91/49/picX9CNE2.jpg'},
+// {title: 'Crunchy Potato Onion Bake', images: 'http://img.sndimg.com/food/image/upload/w_512,h_512,c_fit,fl_progressive,q_95/v1/img/recipes/47/91/49/picX9CNE2.jpg'},
+// {title: 'Crunchy Potato Onion Bake', images: 'http://img.sndimg.com/food/image/upload/w_512,h_512,c_fit,fl_progressive,q_95/v1/img/recipes/47/91/49/picX9CNE2.jpg'}]}]
 
     useEffect(() => {
         axios.get('/api/auto_recommendation/')
@@ -105,29 +121,9 @@ const HomePage = () => {
           <div>
             <AppTopBar />
               <Container fixed className={classes.container}>
-                <Typography variant='h4' className={classes.title}> {recipes.length} Results</Typography>
-                <GridList cellHeight={300} cols={3} spacing={10}>
-                  {recipes.map((tile) => (
-                    <GridListTile className={classes.tile} key={tile.images[0]['id']}>
-                      <img src={tile.images[0]['url']} alt={tile.title} />
-                      <Link to={`/recipe/${tile.index}/`}>
-                      <GridListTileBar
-                              title={tile.title}
-                              subtitle={'4.5 rating'}
-                              classes={{
-                                  root: classes.titleBar,
-                                  subtitle: classes.subtitle,
-                              }}
-                              // actionIcon={
-                              //     <IconButton aria-label={`star ${tile.title}`}>
-                              //         <StarBorderIcon className={classes.title} />
-                              //     </IconButton>
-                              // }
-                          />
-                        </Link>
-                    </GridListTile>
-                  ))}
-                </GridList>
+            {recipes.map((tile) => (
+              <RecipeList data={tile} />
+            ))}
               </Container>
           </div>
         )
