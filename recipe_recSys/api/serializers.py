@@ -1,6 +1,6 @@
 from rest_framework import serializers
 import ast
-from .models import RecipeDetails, RecipeRating, RecipeSave
+from .models import RecipeDetails, RecipeRating, RecipeSave, RecipeEmbeddings
 from django.contrib.auth.models import User
 import django.contrib.auth.password_validation as validators
 
@@ -33,10 +33,12 @@ class RecipeDetailSerializer(serializers.ModelSerializer):
     avg_rating = serializers.SerializerMethodField()
     rating_count = serializers.SerializerMethodField()
     saved = serializers.SerializerMethodField()
+    tfidf_weight = serializers.SerializerMethodField() # Test
+    cleaned_ingrs = serializers.SerializerMethodField() # Test
 
     class Meta:
         model = RecipeDetails
-        fields = ['index', 'title', 'images', 'ingredients', 'instructions', 'rating', 'avg_rating', 'rating_count', 'saved', 'healthiness_label']
+        fields = ['index', 'title', 'images', 'ingredients', 'instructions', 'rating', 'avg_rating', 'rating_count', 'saved', 'healthiness_label', 'tfidf_weight', 'cleaned_ingrs']
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
@@ -75,6 +77,12 @@ class RecipeDetailSerializer(serializers.ModelSerializer):
         else:
             print('False')
             return False
+
+    def get_tfidf_weight(self, obj): 
+        return RecipeEmbeddings.objects.get(index=obj.index).tfidf_weight
+
+    def get_cleaned_ingrs(self, obj): 
+        return RecipeEmbeddings.objects.get(index=obj.index).cleaned_ingrs
 
 
 class RecipeDisplaySerializer(serializers.ModelSerializer):

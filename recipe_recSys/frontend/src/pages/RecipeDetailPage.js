@@ -313,6 +313,9 @@ const RecipeDetailPage = (props) => {
                         </List>
                     </div>
                 </Box>
+                {/* Testing */}
+                <p>{detail.tfidf_weight}</p>  
+                <p>{detail.cleaned_ingrs}</p>
                 </Container>
                 <RatingDialog open={open} onClose={handleClose} recipe_idx={idx} prev_rating={detail.rating}/>
             </div>

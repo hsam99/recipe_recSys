@@ -95,19 +95,32 @@ def recipe_query(request, q):
 @permission_classes([IsAuthenticated])
 def automatic_recommendation_view(request):
     user = request.user
-    prototype_vector = ast.literal_eval(UserProfile.objects.get(user=user).prototype_vector)
-    recipe_recipe_recommendation = find_similar_recipes(user)
-    top_n_recipes, similarity_list = compute_similarity(prototype_vector, 0)
+    has_user_profile = True
+    try:
+        prototype_vector = ast.literal_eval(UserProfile.objects.get(user=user).prototype_vector)
+    except:
+        has_user_profile = False
 
-    recipe_objects = RecipeDetails.objects.filter(index__in=top_n_recipes)
-    recipe_det_serializer = RecipeDisplaySerializer(recipe_objects, context={'similarity': similarity_list}, many=True)
-    return JsonResponse(
-        [{'explanation': 'test', 'recipes': recipe_det_serializer.data, 'index': None, 'link': False}, 
-        recipe_recipe_recommendation], 
-        status=status.HTTP_200_OK, 
-        safe=False
-    )
+    highly_rated_recipe = get_high_rated_recipes()
+    
+    if has_user_profile:
+        recipe_recipe_recommendation = find_similar_recipes(user)
+        top_n_recipes, similarity_list = compute_similarity(prototype_vector, 0)
 
+        recipe_objects = RecipeDetails.objects.filter(index__in=top_n_recipes)
+        recipe_det_serializer = RecipeDisplaySerializer(recipe_objects, context={'similarity': similarity_list}, many=True)
+        return JsonResponse(
+            [{'explanation': 'From recipes that you have rated in the past, these recipes are recommended', 'recipes': recipe_det_serializer.data, 'index': None, 'link': False}, 
+            recipe_recipe_recommendation, highly_rated_recipe], 
+            status=status.HTTP_200_OK, 
+            safe=False
+        )
+    else:
+        return JsonResponse(
+            [highly_rated_recipe],
+            status=status.HTTP_200_OK,
+            safe=False
+        )
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -200,8 +213,8 @@ def prototype_vector(user, flag):
         for recipe in all_negative_recipe:
             negative_prototype = negative_prototype + (np.array(ast.literal_eval(RecipeEmbeddings.objects.get(index=recipe[0]).weighted_ingr_vec)) * int(2/recipe[1]))
     
-    positive_prototype = positive_prototype / len(all_positive_recipe)
-    negative_prototype = negative_prototype / len(all_negative_recipe)
+    positive_prototype = positive_prototype / (1 if len(all_positive_recipe) == 0 else len(all_positive_recipe))
+    negative_prototype = negative_prototype / (1 if len(all_negative_recipe) == 0 else len(all_negative_recipe))
     
     prototype_vector = np.array2string(0.85*positive_prototype - 0.5*negative_prototype, separator=', ')
     if flag == 0:
@@ -274,7 +287,7 @@ def compute_similarity(query_vec, query):
         recipes = RecipeEmbeddings.objects.values_list('index', 'weighted_title_vec')[:5000]
     elif query == 0:
         n = 10
-        recipes = RecipeEmbeddings.objects.values_list('index', 'weighted_ingr_vec').order_by('?')[:5000]
+        recipes = RecipeEmbeddings.objects.values_list('index', 'weighted_ingr_vec')[:5000]
     similarity_list = []
     start_time = time.time()
     for idx, title_vec in recipes:
@@ -310,3 +323,15 @@ def find_similar_recipes(user):
         'link': True
     })
 
+
+def get_high_rated_recipes():
+    high_rating_recipe = list(set(RecipeRating.objects.filter(rating__gte=4).values_list('recipe', flat=True)))
+    recipe_objects = RecipeDetails.objects.filter(index__in=high_rating_recipe)[:10]
+    recipe_det_serializer = RecipeDisplaySerializer(recipe_objects, context={'similarity': []}, many=True)
+
+    return({
+        'explanation': 'Recipes Rated 4 and Above', 
+        'recipes': recipe_det_serializer.data, 
+        'index': None, 
+        'link': False
+    })
