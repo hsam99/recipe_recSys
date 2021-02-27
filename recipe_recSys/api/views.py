@@ -94,13 +94,19 @@ def recipe_query(request, q):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def automatic_recommendation_view(request):
+    ingr_word2vec_model = RecipeSearchConfig.ingr_word2vec_model
     user = request.user
     has_user_profile = True
     try:
         prototype_vector = ast.literal_eval(UserProfile.objects.get(user=user).prototype_vector)
+        
+        if np.array_equal(prototype_vector, np.zeros((1, 100))):
+            has_user_profile = False
     except:
         has_user_profile = False
-
+        print('bye')
+    print(prototype_vector)
+    print(ingr_word2vec_model.similar_by_vector(np.array(prototype_vector).reshape(-1), topn=10))
     highly_rated_recipe = get_high_rated_recipes()
     
     if has_user_profile:
@@ -251,14 +257,18 @@ def vectorize_query(query):
     return query_vec
 
 
-# def compute_similarity(query_vec):
-#     n = 20
+# def compute_similarity(query_vec, query):
 #     final_results = []
 #     random_index = random.sample(range(1, 402324), 402323)
 #     a = time.time()
 #     for num in range(10):
-#         index = random_index[num*2000:(num+1)*2000]
-#         recipes = RecipeEmbeddings.objects.filter(index__in=index).values_list('index', 'weighted_title_vec')
+#         index = random_index[num*2500:(num+1)*2500]
+#         if query == 1:
+#             n = 50
+#             recipes = RecipeEmbeddings.objects.filter(index__in=index).values_list('index', 'weighted_title_vec')
+#         elif query == 0:
+#             n = 10
+#             recipes = RecipeEmbeddings.objects.filter(index__in=index).values_list('index', 'weighted_ingr_vec')
 #         similarity_list = []
 #         start_time = time.time()
 #         for idx, title_vec in recipes:
@@ -270,7 +280,7 @@ def vectorize_query(query):
 #         elapsed_time = time.time() - start_time
 #         print('Elapsed_time: {}'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
 #         similarity_list = sorted(similarity_list, key=lambda x: x[1], reverse=True)
-#         top_recipes = [recipe[0] for recipe in similarity_list if recipe[1] > 0.80 * (0.97**num)] # above threshold
+#         top_recipes = [recipe[0] for recipe in similarity_list if recipe[1] > 0.75 * (0.97**num)] # above threshold
 #         # top_recipes = [recipe[0] for recipe in similarity_list[0:n]] # top n recipes
 #         final_results.extend(top_recipes)
 #         print(final_results)
@@ -278,7 +288,7 @@ def vectorize_query(query):
 #             break
 #     elapsed_time = time.time() - a
 #     print('Elapsed_time: {}'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
-#     return final_results
+#     return final_results, similarity_list[0:n]
 
 
 def compute_similarity(query_vec, query):
@@ -306,7 +316,10 @@ def compute_similarity(query_vec, query):
 
 
 def find_similar_recipes(user):
-    highly_rated_recipe = RecipeRating.objects.filter(user=user, rating__gte=3).order_by('?')[0]
+    try:
+        highly_rated_recipe = RecipeRating.objects.filter(user=user, rating__gte=3).order_by('?')[0]
+    except:
+        return None
     recipe_rating = highly_rated_recipe.rating
     recipe_title = highly_rated_recipe.recipe.title
     recipe_idx = highly_rated_recipe.recipe.index

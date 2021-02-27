@@ -60,6 +60,7 @@ export default function SignUpPage(props) {
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [helperText, setHelperText] = useState({});
 
   const handleEmailChange = (e) => {
     setEmail(e.target.value);
@@ -89,6 +90,7 @@ export default function SignUpPage(props) {
       console.log(response.data)
       setUserCreated(true)
     }, (error) => {
+      setHelperText(error.response.data);
       console.log(1,error.response.data);
     });
   }
@@ -143,6 +145,8 @@ export default function SignUpPage(props) {
                     label="Username"
                     autoFocus
                     onChange={handleUsernameChange}
+                    helperText={'username' in helperText === true?helperText['username'][0]:''}
+                    error={'username' in helperText}
                   />
                 </Grid>
                 <Grid item xs={12}>
@@ -155,6 +159,8 @@ export default function SignUpPage(props) {
                     name="email"
                     autoComplete="email"
                     onChange={handleEmailChange}
+                    helperText={'email' in helperText === true?helperText['email'][0]:''}
+                    error={'email' in helperText}
                   />
                 </Grid>
                 <Grid item xs={12}>
@@ -167,6 +173,8 @@ export default function SignUpPage(props) {
                     type="password"
                     id="password"
                     onChange={handlePasswordChange}
+                    helperText={'password' in helperText === true?helperText['password'][0]:''}
+                    error={'password' in helperText}
                   />
                 </Grid>
               </Grid>

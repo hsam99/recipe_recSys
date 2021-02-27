@@ -52,22 +52,33 @@ export default function SignInPage(props) {
   const [password, setPassword] = useState('');
   const [alert, setAlert] = useState(false);
   const [flag, setFlag] = useState(true);
+  const [helperText, setHelperText] = useState({});
   // console.log(props.location.state.from.pathname)
 
+
+const alertFunc = () => {
   try{
     if(props.location.state.from.pathname == '/signup/'){
+      console.log(2, props.location.state)
       if(props.location.state.fromSignUp){
         setAlert(true)
-        props.location.state = undefined
       }
+    }
+    const state = props.location;
+    if (state.state.from) {
+      const stateCopy = { ...state };
+      delete stateCopy.from;
+      props.history.replace({ state: stateCopy });
     }
   }
   catch{
   }
+}
 
   useEffect(async () => {
     await axios.get('/api/session/')
     .then((response) => {
+      alertFunc();
       if (response.data.isAuthenticated){
         setredirectToReferrer(true);
       } else {
@@ -100,9 +111,11 @@ export default function SignInPage(props) {
     })
     .then((response) => {
       setredirectToReferrer(true);
-      console.log(response.data)
+      console.log(2,response.data)
     }, (error) => {
-      console.log(error.response.data);
+      setAlert(false);
+      setHelperText(error.response.data);
+      console.log(1,error.response.data);
     });
   }
 
@@ -125,8 +138,10 @@ export default function SignInPage(props) {
               Sign in
             </Typography>
             <Alert severity="success" className={classes.alertbox} style={{display: alert === true ? 'block': 'none'}}>
-              <AlertTitle>Success</AlertTitle>
-              Account created!
+              <AlertTitle>Account created!</AlertTitle>
+            </Alert>
+            <Alert severity="error" className={classes.alertbox} style={{display: 'detail' in helperText === true  ? 'block': 'none'}}>
+              <AlertTitle>Wrong username or password.</AlertTitle>
             </Alert>
             <form className={classes.form} onSubmit={handleSubmit}>
               <TextField
