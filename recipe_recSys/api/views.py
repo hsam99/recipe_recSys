@@ -83,12 +83,14 @@ def recipe_query(request, q):
     # else:
     #     return Response('Invalid query')
     query_vec = vectorize_query(q)
-    # query_vec = np.array(ast.literal_eval(UserProfile.objects.get(user=request.user).prototype_vector))
-    top_n_recipes, similarity_list = compute_similarity(query_vec, 1)
+    if query_vec is None:
+        return Response({'detail': "Could not find '{}'.".format(q)}, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        top_n_recipes, similarity_list = compute_similarity(query_vec, 1)
 
-    recipe_objects = RecipeDetails.objects.filter(index__in=top_n_recipes)
-    recipe_det_serializer = RecipeDisplaySerializer(recipe_objects, context={'similarity': similarity_list}, many=True)
-    return Response(recipe_det_serializer.data, status=status.HTTP_200_OK)
+        recipe_objects = RecipeDetails.objects.filter(index__in=top_n_recipes)
+        recipe_det_serializer = RecipeDisplaySerializer(recipe_objects, context={'similarity': similarity_list}, many=True)
+        return Response(recipe_det_serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(['GET'])
@@ -105,8 +107,8 @@ def automatic_recommendation_view(request):
     except:
         has_user_profile = False
         print('bye')
-    print(prototype_vector)
-    print(ingr_word2vec_model.similar_by_vector(np.array(prototype_vector).reshape(-1), topn=10))
+
+    # print(ingr_word2vec_model.similar_by_vector(np.array(prototype_vector).reshape(-1), topn=10))
     highly_rated_recipe = get_high_rated_recipes()
     
     if has_user_profile:
@@ -200,7 +202,7 @@ def get_saved_recipe(request):
         saved_recipe_id.append(recipe['recipe'])
         
     recipe_objects = RecipeDetails.objects.filter(index__in=saved_recipe_id)
-    recipe_det_serializer = RecipeDisplaySerializer(recipe_objects, many=True)
+    recipe_det_serializer = RecipeDisplaySerializer(recipe_objects, context={'similarity': []}, many=True)
     return Response(recipe_det_serializer.data, status=status.HTTP_200_OK)
 
 
@@ -244,14 +246,18 @@ def vectorize_query(query):
     tokenized_string = tokenizer.tokenize(cleaned_string)
     tokens_without_sw = [word for word in tokenized_string if not word in stop_words]
     cleaned_query = [lemmatizer.lemmatize(w) for w in tokens_without_sw]
+    try:
+        test_word = title_word2vec_model[cleaned_query]
+    except:
+        return None
+
     if not query or not cleaned_query:
-        return -1
+        return None
 
     for i in range(len(cleaned_query)):
       similar_word = title_word2vec_model.wv.most_similar(positive=cleaned_query[i], topn=1)[0]
       if similar_word[1] > 0.85:
         cleaned_query.append(similar_word[0])
-    
     query_vec = (sum(title_word2vec_model[cleaned_query])).reshape(1, -1)
 
     return query_vec
@@ -339,7 +345,8 @@ def find_similar_recipes(user):
 
 def get_high_rated_recipes():
     high_rating_recipe = list(set(RecipeRating.objects.filter(rating__gte=4).values_list('recipe', flat=True)))
-    recipe_objects = RecipeDetails.objects.filter(index__in=high_rating_recipe)[:10]
+    high_rating_recipe = random.sample(high_rating_recipe, 10)
+    recipe_objects = RecipeDetails.objects.filter(index__in=high_rating_recipe)
     recipe_det_serializer = RecipeDisplaySerializer(recipe_objects, context={'similarity': []}, many=True)
 
     return({

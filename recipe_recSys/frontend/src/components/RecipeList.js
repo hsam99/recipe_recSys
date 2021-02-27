@@ -9,6 +9,7 @@ import StarBorderIcon from '@material-ui/icons/StarBorder';
 import IconButton from '@material-ui/core/IconButton';
 import Typography from '@material-ui/core/Typography';
 import { Link } from 'react-router-dom';
+import CheckCircleOutlineIcon from '@material-ui/icons/CheckCircleOutline';
 
 const useStyles = makeStyles((theme) => ({
     header: {
@@ -38,7 +39,7 @@ const useStyles = makeStyles((theme) => ({
 
 const formatString = (str, index) => {
     const split_str = str.split(/[:;]/);
-
+    console.log(split_str[2].slice(0))
     return(
         <span>{split_str[0]} <Link to={`/recipe/${index}/`}> {split_str[1]} </Link> {split_str[2]}</span>
     )
@@ -47,7 +48,9 @@ const formatString = (str, index) => {
 const RecipeList = (props) => {
     const classes = useStyles();
     const tileData = props.data;
-    
+    tileData.recipes.sort((a, b) => { 
+        return -(a.count - b.count);
+    })
     return(
         <div className={classes.listComponent}>
             <Typography variant="h5" className={classes.header}>{tileData.link===true? formatString(tileData.explanation, tileData.index) : tileData.explanation}</Typography>
@@ -59,6 +62,9 @@ const RecipeList = (props) => {
                         <Link to={`/recipe/${tile.index}/`}>
                         <GridListTileBar
                             title={tile.title}
+                            subtitle={tile.count > 3 
+                                ?<div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', color: '#7FFF00', }}><CheckCircleOutlineIcon fontSize="small" /><span> Healthier Choice</span></div>
+                                : ''}
                             classes={{
                                 root: classes.titleBar,
                                 title: classes.title,

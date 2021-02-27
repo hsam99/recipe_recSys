@@ -9,6 +9,7 @@ import Container from "@material-ui/core/Container";
 import Typography from "@material-ui/core/Typography";
 import { Link } from "react-router-dom";
 import LoadingOverlay from 'react-loading-overlay';
+import CheckCircleOutlineIcon from '@material-ui/icons/CheckCircleOutline';
 
 
 const useStyles = makeStyles((theme) => ({
@@ -17,7 +18,7 @@ const useStyles = makeStyles((theme) => ({
     },
     container: {
       backgroundColor: 'whitesmoke',
-      height: '100%',
+      height: '80%',
       width: '100%',
       marginTop: 35,
       marginBottom: 50,
@@ -55,7 +56,7 @@ const SavedRecipePage = () => {
 
     if (loading){
         return (
-            <div>
+            <>
             <AppTopBar />
             <Container fixed >
               <div className={classes.overlay}>
@@ -87,11 +88,14 @@ const SavedRecipePage = () => {
                 </LoadingOverlay>
               </div>
             </Container>
-          </div>
+          </>
         )
     } else {
+      recipes.sort((a, b) => { 
+        return -(a.count - b.count);
+    })
         return (
-            <div>
+            <>
                 <AppTopBar />
                 <Container fixed className={classes.container}>
                   <Typography variant='h4' className={classes.title}> {recipes.length} Results</Typography>
@@ -102,6 +106,9 @@ const SavedRecipePage = () => {
                         <Link to={`/recipe/${tile.index}/`}>
                         <GridListTileBar
                                 title={tile.title}
+                                subtitle={tile.count > 3 
+                                  ?<div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', color: '#7FFF00', }}><CheckCircleOutlineIcon fontSize="small" /><span> Healthier Choice</span></div>
+                                  : ''}
                                 classes={{
                                     root: classes.titleBar,
                                     subtitle: classes.subtitle,
@@ -118,7 +125,7 @@ const SavedRecipePage = () => {
                   </GridList>
                 </Container>
                 {/* <RecipeList searchResult={searchResult} /> */}
-            </div>
+            </>
         ) 
     }
 };

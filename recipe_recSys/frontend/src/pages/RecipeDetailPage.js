@@ -133,8 +133,9 @@ const useStyles = makeStyles((theme) => ({
 const cookies = new Cookies();
 
 const RatingDialog = (props) => {
-    const { onClose, open, recipe_idx, prev_rating } = props;
+    const { onClose, open, recipe_idx, prev_rating, setDetail } = props;
     const [rating, setRating] = useState(prev_rating);
+    const [update, setUpdate] = useState(false);
     const classes = useStyles();
 
     const handleClose = () => {
@@ -155,6 +156,7 @@ const RatingDialog = (props) => {
             }
           })
           .then((response) => {
+            setUpdate(true);
             console.log(response.data)
           }, (error) => {
             console.log(error.response.data);
@@ -162,6 +164,17 @@ const RatingDialog = (props) => {
       
       onClose();
     };
+
+    if (update === true){
+        axios.get(`/api/recipe/${recipe_idx}/`)
+        .then((response) => {
+        console.log(response)
+        setDetail(response.data);
+        setUpdate(false);
+        }, (error) => {
+        console.log(error);
+        });
+    }
 
     return (
       <Dialog
@@ -278,8 +291,8 @@ const RecipeDetailPage = (props) => {
                             <SaveButton classes={classes} save_state={detail.saved} recipe_idx={idx}/>
                         </div>
                         <div className={classes.rating}>
-                            <Rating name="read-only" value={detail.avg_rating} readOnly size="small"/> 
-                            <Box ml={2}>{detail.rating_count} ratings</Box>
+                            <Rating name="read-only" value={detail.avg_rating} readOnly size="small" precision={0.5}/> 
+                            <Box ml={2}>{detail.rating_count} {(detail.rating_count==0||detail.rating_count==1)?'rating':'ratings'}</Box>
                             <Link href='#' onClick={handleOpen}><Box ml={2}>Rate</Box></Link>
                         </div> 
                     </div>
@@ -317,7 +330,7 @@ const RecipeDetailPage = (props) => {
                 <p>{detail.tfidf_weight}</p>  
                 <p>{detail.cleaned_ingrs}</p>
                 </Container>
-                <RatingDialog open={open} onClose={handleClose} recipe_idx={idx} prev_rating={detail.rating}/>
+                <RatingDialog open={open} onClose={handleClose} recipe_idx={idx} prev_rating={detail.rating} setDetail={setDetail}/>
             </div>
         )
     }

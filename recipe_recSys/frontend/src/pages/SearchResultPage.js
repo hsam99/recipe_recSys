@@ -26,14 +26,15 @@ import CheckCircleOutlineIcon from '@material-ui/icons/CheckCircleOutline';
 
 const useStyles = makeStyles((theme) => ({
     root: {
-      overflow: 'hidden',
+      overflow: 'auto',
     },
     container: {
       backgroundColor: 'whitesmoke',
-      height: '100%',
+      height: '80%',
       width: '100%',
       marginTop: 35,
       marginBottom: 50,
+
     },
     tile: {
       marginBottom: 15,
@@ -80,16 +81,20 @@ const SearchResultComponent = (query) => {
     const classes = useStyles();
     const [loading, setLoading] = useState(true);
     const [searchResult, setResult] = useState([]);
+    const [queryError, setQueryError] = useState({});
 
   useEffect(() => {
     if (loading) {
       axios.get(`/api/search/${query}/`)
       .then((response) => {
         console.log(response.data)
-        setLoading(false)
-        setResult(response.data)
+        setQueryError({});
+        setLoading(false);
+        setResult(response.data);
       }, (error) => {
-        console.log(error);
+        setLoading(false);
+        setQueryError(error.response.data);
+        console.log(error.response.data);
       });
     }
   }, [loading]);
@@ -97,6 +102,8 @@ const SearchResultComponent = (query) => {
   useEffect(() => {
     setLoading(true);
   }, [query])
+
+  
 
     if (loading) {
       return (
@@ -139,6 +146,16 @@ const SearchResultComponent = (query) => {
       searchResult.sort((a, b) => { 
         return -(a.count - b.count);
     })
+    if('detail' in queryError){
+      return (
+        <>
+          <AppTopBar />
+          <Container fixed className={classes.container}>
+            <Typography variant='h4' className={classes.title}>{queryError['detail']}</Typography>
+          </Container>
+        </>
+      )
+    }
       return (
           <div>
               <AppTopBar />
@@ -151,7 +168,7 @@ const SearchResultComponent = (query) => {
                       <Link to={`/recipe/${tile.index}/`}>
                       <GridListTileBar
                               title={tile.title}
-                              subtitle={tile.count > 2 
+                              subtitle={tile.count > 3 
                               ?<div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', color: '#7FFF00', }}><CheckCircleOutlineIcon fontSize="small" /><span> Healthier Choice</span></div>
                               : ''}
                               classes={{
@@ -178,9 +195,9 @@ const SearchResultComponent = (query) => {
 const SearchResultPage = (props) => {
   
   return(
-    <div>
+    <>
       {props.match.params.q ? SearchResultComponent(props.match.params.q) : <p>error</p>}
-    </div>
+    </>
   )
 }
 
