@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import GridList from '@material-ui/core/GridList';
 import GridListTile from '@material-ui/core/GridListTile';
@@ -59,14 +59,22 @@ const formatString = (str, index) => {
 const RecipeList = (props) => {
     const classes = useStyles();
     const tileData = props.data;
+    const [width, setWidth] = useState(window.innerWidth);
+    const breakpoint = 960;
+
+    useEffect(() => {
+        window.addEventListener("resize", () => setWidth(window.innerWidth));
+      }, []);
+
     tileData.recipes.sort((a, b) => { 
         return -(a.count - b.count);
     })
+
     return(
         <div className={classes.listComponent}>
             <Typography variant="h5" className={classes.header}>{tileData.link===true? formatString(tileData.explanation, tileData.index) : tileData.explanation}</Typography>
             <div className={classes.root}>
-                <GridList className={classes.gridList} cols={3.5} cellHeight={300} spacing={5}>
+                <GridList className={classes.gridList} cols={width<breakpoint?1.5:3.5} cellHeight={300} spacing={5}>
                     {tileData.recipes.map((tile) => (
                         <GridListTile key={tile.images[0]['id']}>
                             <img src={tile.images[0]['url']} alt={tile.title} />

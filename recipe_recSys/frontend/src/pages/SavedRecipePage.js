@@ -55,6 +55,12 @@ const SavedRecipePage = () => {
     const classes = useStyles();
     const [loading, setLoading] = useState(true);
     const [recipes, setRecipes] = useState([]);
+    const [width, setWidth] = useState(window.innerWidth);
+    const breakpoint = 960;
+
+    useEffect(() => {
+        window.addEventListener("resize", () => setWidth(window.innerWidth));
+      }, []);
 
     useEffect(() => {
         axios.get('/api/view_saved/')
@@ -112,7 +118,7 @@ const SavedRecipePage = () => {
                 <AppTopBar />
                 <Container fixed className={classes.container}>
                   <Typography variant='h4' className={classes.title}> {recipes.length} Results</Typography>
-                  <GridList cellHeight={300} cols={3} spacing={10}>
+                  <GridList cellHeight={300} cols={width<breakpoint?2:3} spacing={10}>
                     {recipes.map((tile) => (
                       <GridListTile className={classes.tile} key={tile.images[0]['id']}>
                         <img src={tile.images[0]['url']} alt={tile.title} />

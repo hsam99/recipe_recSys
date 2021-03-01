@@ -25,6 +25,14 @@ import { IconButton } from "@material-ui/core";
 import Tooltip from '@material-ui/core/Tooltip';
 import TurnedInIcon from '@material-ui/icons/TurnedIn';
 import ToggleButton from '@material-ui/lab/ToggleButton';
+import Table from '@material-ui/core/Table';
+import TableBody from '@material-ui/core/TableBody';
+import TableCell from '@material-ui/core/TableCell';
+import TableContainer from '@material-ui/core/TableContainer';
+import TableHead from '@material-ui/core/TableHead';
+import TableRow from '@material-ui/core/TableRow';
+import FiberManualRecordIcon from '@material-ui/icons/FiberManualRecord';
+import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -127,6 +135,17 @@ const useStyles = makeStyles((theme) => ({
     rowDiv: {
         display: 'flex',
         justifyContent: 'space-between'
+    },
+    FSA: {
+        marginTop: 50,
+        maxWidth: 250,
+        padding: 15,
+        paddingRight: 0,
+    },
+    FSATitle: {
+        display: 'flex', 
+        alignItems: 'center',
+        justifyContent: 'space-between'
     }
   }));
 
@@ -183,30 +202,61 @@ const RatingDialog = (props) => {
         aria-labelledby="alert-dialog-title"
         aria-describedby="alert-dialog-description"
       >
-          <div className={classes.dialog}>
-      <DialogTitle id="alert-dialog-title">{"Rate this recipe"}</DialogTitle>
-      <DialogContent>
-        <DialogContentText>Your rating:</DialogContentText>
-        <Rating
-          name="simple-controlled"
-          size="large"
-          value={rating}
-          onChange={(event, newValue) => {
-            setRating(newValue);
-          }}
-        />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose} color="primary" size="small">
-            Cancel
-          </Button>
-          <Button color="primary" autoFocus size="small" onClick={handleRatingSubmit}>
-            Submit
-          </Button>
-        </DialogActions>
+        <div className={classes.dialog}>
+            <DialogTitle id="alert-dialog-title">{"Rate this recipe"}</DialogTitle>
+            <DialogContent>
+                <DialogContentText>Your rating:</DialogContentText>
+                <Rating
+                name="simple-controlled"
+                size="large"
+                value={rating}
+                onChange={(event, newValue) => {
+                    setRating(newValue);
+                }}
+                />
+                </DialogContent>
+                <DialogActions>
+                <Button onClick={handleClose} color="primary" size="small">
+                    Cancel
+                </Button>
+                <Button color="primary" autoFocus size="small" onClick={handleRatingSubmit}>
+                    Submit
+                </Button>
+                </DialogActions>
         </div>
       </Dialog>
     )
+}
+
+const FSADialog = (props) => {
+    const { onClose, open } = props;
+    const classes = useStyles();
+
+    const handleClose = () => {
+      onClose();
+    };
+
+    return (
+        <Dialog
+          open={open}
+          onClose={handleClose}
+          aria-labelledby="alert-dialog-title"
+          aria-describedby="alert-dialog-description"
+        >
+          <div className={classes.dialog}>
+              <DialogTitle id="alert-dialog-title">Additional Info</DialogTitle>
+              <DialogContent>
+                  <DialogContentText>Your rating:</DialogContentText>
+                    Kari Lembu
+                  </DialogContent>
+                  <DialogActions>
+                  <Button onClick={handleClose} color="primary" size="small">
+                      Close
+                  </Button>
+                  </DialogActions>
+          </div>
+        </Dialog>
+      )
 }
 
 const SaveButton = (props) => {
@@ -246,8 +296,17 @@ const RecipeDetailPage = (props) => {
     const [detail, setDetail] = useState({});
     const [loading, setLoading] = useState(true);
     const [open, setOpen] = useState(false);
+    const [fsaOpen, setFsaOpen] = useState(false);
     const idx = props.match.params.idx;
     
+    const handleFsaOpen = () => {
+        setFsaOpen(true);
+    };
+    
+    const handleFsaClose = () => {
+        setFsaOpen(false);
+    };
+
     const handleOpen = () => {
         setOpen(true);
     };
@@ -266,6 +325,18 @@ const RecipeDetailPage = (props) => {
         console.log(error);
         });
     }, []);
+
+    const formatFSALabels = (label) => {
+        if(label[0] == 1){
+            return 'green';
+        }
+        else if(label[1] == 1){
+            return 'orange';
+        }
+        else{
+            return 'red';
+        }
+    }
     
     const images = detail.images;
     const title = detail.title;
@@ -294,7 +365,43 @@ const RecipeDetailPage = (props) => {
                             <Rating name="read-only" value={detail.avg_rating} readOnly size="small" precision={0.5}/> 
                             <Box ml={2}>{detail.rating_count} {(detail.rating_count==0||detail.rating_count==1)?'rating':'ratings'}</Box>
                             <Link href='#' onClick={handleOpen}><Box ml={2}>Rate</Box></Link>
-                        </div> 
+                        </div>
+                        <Box border={2} className={classes.FSA}>
+                            <Box className={classes.FSATitle}>
+                                <Typography variant="h6">FSA Traffic Light Info</Typography>
+                                <IconButton onClick={handleFsaOpen}>
+                                    <HelpOutlineIcon fontSize="small"/>
+                                </IconButton>
+                            </Box>
+                            <Table style={{maxWidth: 130, marginTop: 15}} padding='none'>
+                                <TableBody>
+                                    <TableRow>
+                                        <TableCell component="th" scope="row">Fat</TableCell>
+                                        <TableCell align="right">
+                                            <FiberManualRecordIcon fontSize="small" style={{ color: formatFSALabels(detail.healthiness_label[0]) }} />
+                                        </TableCell>
+                                    </TableRow>
+                                    <TableRow>
+                                        <TableCell component="th" scope="row">Salt</TableCell>
+                                        <TableCell align="right">
+                                            <FiberManualRecordIcon fontSize="small" style={{ color: formatFSALabels(detail.healthiness_label[1]) }} />
+                                        </TableCell>
+                                    </TableRow>
+                                    <TableRow>
+                                        <TableCell component="th" scope="row">Saturates</TableCell>
+                                        <TableCell align="right">
+                                            <FiberManualRecordIcon fontSize="small" style={{ color: formatFSALabels(detail.healthiness_label[2]) }} />
+                                        </TableCell>
+                                    </TableRow>
+                                    <TableRow>
+                                        <TableCell component="th" scope="row">Sugar</TableCell>
+                                        <TableCell align="right">
+                                            <FiberManualRecordIcon fontSize="small" style={{ color: formatFSALabels(detail.healthiness_label[3]) }} />
+                                        </TableCell>
+                                    </TableRow>
+                                </TableBody>
+                            </Table>
+                        </Box> 
                     </div>
                 </div>
                 <Box className={classes.infoSection}>
@@ -331,6 +438,7 @@ const RecipeDetailPage = (props) => {
                 <p>{detail.cleaned_ingrs}</p>
                 </Container>
                 <RatingDialog open={open} onClose={handleClose} recipe_idx={idx} prev_rating={detail.rating} setDetail={setDetail}/>
+                <FSADialog open={fsaOpen} onClose={handleFsaClose}/>
             </div>
         )
     }

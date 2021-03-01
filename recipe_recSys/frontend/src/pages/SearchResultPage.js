@@ -92,6 +92,12 @@ const SearchResultComponent = (query) => {
     const [loading, setLoading] = useState(true);
     const [searchResult, setResult] = useState([]);
     const [queryError, setQueryError] = useState({});
+    const [width, setWidth] = useState(window.innerWidth);
+    const breakpoint = 960;
+
+    useEffect(() => {
+        window.addEventListener("resize", () => setWidth(window.innerWidth));
+      }, []);
 
   useEffect(() => {
     if (loading) {
@@ -171,7 +177,7 @@ const SearchResultComponent = (query) => {
               <AppTopBar />
               <Container fixed className={classes.container}>
                 <Typography variant='h4' className={classes.title}> {searchResult.length} Results</Typography>
-                <GridList cellHeight={300} cols={3} spacing={10}>
+                <GridList cellHeight={300} cols={width<breakpoint?2:3} spacing={10}>
                   {searchResult.map((tile) => (
                     <GridListTile className={classes.tile} key={tile.images[0]['id']}>
                       <img src={tile.images[0]['url']} alt={tile.title} />
