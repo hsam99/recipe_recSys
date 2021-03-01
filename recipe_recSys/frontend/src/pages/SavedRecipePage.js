@@ -10,6 +10,10 @@ import Typography from "@material-ui/core/Typography";
 import { Link } from "react-router-dom";
 import LoadingOverlay from 'react-loading-overlay';
 import CheckCircleOutlineIcon from '@material-ui/icons/CheckCircleOutline';
+import Tooltip from '@material-ui/core/Tooltip';
+import Rating from '@material-ui/lab/Rating';
+import Box from '@material-ui/core/Box';
+import IconButton from '@material-ui/core/IconButton';
 
 
 const useStyles = makeStyles((theme) => ({
@@ -26,6 +30,9 @@ const useStyles = makeStyles((theme) => ({
     tile: {
       marginBottom: 15,
     },
+    titleBar: {
+      backgroundColor: 'rgba(0, 0, 0, 0.35)'
+  },
     title: {
       padding: theme.spacing(4, 0, 2, 0),
     },
@@ -35,7 +42,13 @@ const useStyles = makeStyles((theme) => ({
     },
     subtitle: {
       paddingBottom: 1 
-    }
+    },
+    rating: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      width: 115
+  }
   }));
 
 const SavedRecipePage = () => {
@@ -106,9 +119,20 @@ const SavedRecipePage = () => {
                         <Link to={`/recipe/${tile.index}/`}>
                         <GridListTileBar
                                 title={tile.title}
-                                subtitle={tile.count > 3 
-                                  ?<div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', color: '#7FFF00', }}><CheckCircleOutlineIcon fontSize="small" /><span> Healthier Choice</span></div>
-                                  : ''}
+                            subtitle={<div className={classes.rating}><Rating
+                                readOnly="true"
+                                size="small"
+                                value={tile.avg_rating}
+                              /><Box>({tile.rating_count})</Box></div>}
+                            actionIcon={tile.count > 3 
+                                ?<div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
+                                    <Tooltip title="Healthier Choice">
+                                        <IconButton style={{ color: '#7FFF00' }}>
+                                            <CheckCircleOutlineIcon  />
+                                        </IconButton>
+                                    </Tooltip>
+                                </div>
+                                : ''}
                                 classes={{
                                     root: classes.titleBar,
                                     subtitle: classes.subtitle,

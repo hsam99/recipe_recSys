@@ -10,6 +10,10 @@ import IconButton from '@material-ui/core/IconButton';
 import Typography from '@material-ui/core/Typography';
 import { Link } from 'react-router-dom';
 import CheckCircleOutlineIcon from '@material-ui/icons/CheckCircleOutline';
+import Tooltip from '@material-ui/core/Tooltip';
+import Rating from '@material-ui/lab/Rating';
+import Box from '@material-ui/core/Box';
+
 
 const useStyles = makeStyles((theme) => ({
     header: {
@@ -31,9 +35,16 @@ const useStyles = makeStyles((theme) => ({
       color: 'white',
     },
     titleBar: {
+        backgroundColor: 'rgba(0, 0, 0, 0.35)'
     },
     listComponent: {
         marginBottom: 50,
+    },
+    rating: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        width: 115
     }
   }));
 
@@ -62,8 +73,19 @@ const RecipeList = (props) => {
                         <Link to={`/recipe/${tile.index}/`}>
                         <GridListTileBar
                             title={tile.title}
-                            subtitle={tile.count > 3 
-                                ?<div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', color: '#7FFF00', }}><CheckCircleOutlineIcon fontSize="small" /><span> Healthier Choice</span></div>
+                            subtitle={<div className={classes.rating}><Rating
+                                readOnly="true"
+                                size="small"
+                                value={tile.avg_rating}
+                              /><Box>({tile.rating_count})</Box></div>}
+                            actionIcon={tile.count > 3 
+                                ?<div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
+                                    <Tooltip title="Healthier Choice">
+                                        <IconButton style={{ color: '#7FFF00' }}>
+                                            <CheckCircleOutlineIcon  />
+                                        </IconButton>
+                                    </Tooltip>
+                                </div>
                                 : ''}
                             classes={{
                                 root: classes.titleBar,

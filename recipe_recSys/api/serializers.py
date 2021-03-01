@@ -88,10 +88,12 @@ class RecipeDetailSerializer(serializers.ModelSerializer):
 class RecipeDisplaySerializer(serializers.ModelSerializer):
     count = serializers.SerializerMethodField()
     similarity = serializers.SerializerMethodField()
+    avg_rating = serializers.SerializerMethodField()
+    rating_count = serializers.SerializerMethodField()
 
     class Meta:
         model = RecipeDetails
-        fields = ['index', 'title', 'images', 'healthiness_label', 'count', 'similarity']
+        fields = ['index', 'title', 'images', 'healthiness_label', 'count', 'similarity', 'avg_rating', 'rating_count']
         ordering = ['count']
 
     def to_representation(self, instance):
@@ -118,6 +120,20 @@ class RecipeDisplaySerializer(serializers.ModelSerializer):
         similarity_score = next((v[1] for v in similarity_list if v[0] == obj_idx), None)
 
         return similarity_score
+
+    def get_avg_rating(self, obj):
+        total_rating = 0
+        all_ratings = RecipeRating.objects.filter(recipe=obj)
+
+        if len(all_ratings) == 0:
+            return None
+        else:
+            for recipe_rating in all_ratings:
+                total_rating += recipe_rating.rating
+            return total_rating/len(all_ratings)
+
+    def get_rating_count(self, obj):
+        return len(RecipeRating.objects.filter(recipe=obj))
 
 
 class RecipeRatingSerializer(serializers.Serializer):
