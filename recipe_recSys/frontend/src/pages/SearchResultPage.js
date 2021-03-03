@@ -185,6 +185,7 @@ const SearchResultComponent = (query) => {
                       <GridListTileBar
                               title={tile.title}
                               subtitle={<div className={classes.rating}><Rating
+                              precision={0.5}
                               readOnly="true"
                               size="small"
                               value={tile.avg_rating}

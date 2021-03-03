@@ -99,6 +99,7 @@ def automatic_recommendation_view(request):
     ingr_word2vec_model = RecipeSearchConfig.ingr_word2vec_model
     user = request.user
     has_user_profile = True
+    print(ingr_word2vec_model.most_similar(positive=['rice'], topn=5))
     try:
         prototype_vector = ast.literal_eval(UserProfile.objects.get(user=user).prototype_vector)
         
@@ -352,10 +353,16 @@ def find_similar_recipes(user):
     top_n_recipes, similarity_list = compute_similarity(recipe_embedding, 0)
     recipe_objects = RecipeDetails.objects.filter(index__in=top_n_recipes)
     recipe_det_serializer = RecipeDisplaySerializer(recipe_objects, context={'similarity': similarity_list}, many=True)
+    recipe_list = recipe_det_serializer.data
+    for i in range(len(recipe_list)):
+        if recipe_list[i]['index'] == recipe_idx:
+            print('they pop')
+            a = recipe_list.pop(i)
+            break
 
     return({
         'explanation': 'Recipes similar to :{};, which you have rated {}'.format(recipe_title, recipe_rating), 
-        'recipes': recipe_det_serializer.data,
+        'recipes': recipe_list,
         'index': recipe_idx,
         'link': True
     })
@@ -363,13 +370,19 @@ def find_similar_recipes(user):
 
 def get_high_rated_recipes():
     high_rating_recipe = list(set(RecipeRating.objects.filter(rating__gte=4).values_list('recipe', flat=True)))
-    high_rating_recipe = random.sample(high_rating_recipe, 10)
     recipe_objects = RecipeDetails.objects.filter(index__in=high_rating_recipe)
     recipe_det_serializer = RecipeDisplaySerializer(recipe_objects, context={'similarity': []}, many=True)
+    recipe_list = []
+    for recipe in recipe_det_serializer.data:
+        if recipe['avg_rating'] < 4:
+            pass
+        else:
+            recipe_list.append(recipe)
+    random.shuffle(recipe_list)
 
     return({
         'explanation': 'Recipes Rated 4 and Above', 
-        'recipes': recipe_det_serializer.data, 
+        'recipes': recipe_list[0:10], 
         'index': None, 
         'link': False
     })
