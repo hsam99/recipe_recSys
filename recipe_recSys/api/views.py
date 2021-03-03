@@ -117,9 +117,19 @@ def automatic_recommendation_view(request):
 
         recipe_objects = RecipeDetails.objects.filter(index__in=top_n_recipes)
         recipe_det_serializer = RecipeDisplaySerializer(recipe_objects, context={'similarity': similarity_list}, many=True)
+        explanation_sections = [{'explanation': 'From recipes that you have rated in the past, these recipes are recommended', 'recipes': recipe_det_serializer.data, 'index': None, 'link': False},
+                                recipe_recipe_recommendation, 
+                                highly_rated_recipe]
+        valid_explanation_sections = []
+
+        for section in range(len(explanation_sections)):
+            if explanation_sections[section] is None:
+                pass
+            else:
+                valid_explanation_sections.append(explanation_sections[section])
+
         return JsonResponse(
-            [{'explanation': 'From recipes that you have rated in the past, these recipes are recommended', 'recipes': recipe_det_serializer.data, 'index': None, 'link': False}, 
-            recipe_recipe_recommendation, highly_rated_recipe], 
+            valid_explanation_sections, 
             status=status.HTTP_200_OK, 
             safe=False
         )
@@ -196,14 +206,22 @@ def recipe_save_view(request):
 @permission_classes([IsAuthenticated])
 def get_saved_recipe(request):
     saved_recipe_id = []
+    rated_recipe_id = []
     user = request.user
     saved_recipes = RecipeSave.objects.filter(user=user).values('recipe')
+    rated_recipes = RecipeRating.objects.filter(user=user).values('recipe')
     for recipe in saved_recipes:
         saved_recipe_id.append(recipe['recipe'])
-        
-    recipe_objects = RecipeDetails.objects.filter(index__in=saved_recipe_id)
-    recipe_det_serializer = RecipeDisplaySerializer(recipe_objects, context={'similarity': []}, many=True)
-    return Response(recipe_det_serializer.data, status=status.HTTP_200_OK)
+    
+    for recipe in rated_recipes:
+        rated_recipe_id.append(recipe['recipe'])
+
+    recipe_objects_saved = RecipeDetails.objects.filter(index__in=saved_recipe_id)
+    recipe_det_serializer_saved = RecipeDisplaySerializer(recipe_objects_saved, context={'similarity': []}, many=True)
+    recipe_objects_rated = RecipeDetails.objects.filter(index__in=rated_recipe_id)
+    recipe_det_serializer_rated = RecipeDisplaySerializer(recipe_objects_rated, context={'similarity': []}, many=True)
+
+    return Response([recipe_det_serializer_saved.data, recipe_det_serializer_rated.data], status=status.HTTP_200_OK)
 
 
 def prototype_vector(user, flag):

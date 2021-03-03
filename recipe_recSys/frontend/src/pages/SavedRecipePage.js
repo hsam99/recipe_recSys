@@ -22,10 +22,10 @@ const useStyles = makeStyles((theme) => ({
     },
     container: {
       backgroundColor: 'whitesmoke',
-      height: '80%',
+      height: '100%',
       width: '100%',
       marginTop: 35,
-      marginBottom: 50,
+      marginBottom: 50
     },
     tile: {
       marginBottom: 15,
@@ -38,7 +38,6 @@ const useStyles = makeStyles((theme) => ({
     },
     overlay : {
       height: '100vh',
-
     },
     subtitle: {
       paddingBottom: 1 
@@ -48,6 +47,9 @@ const useStyles = makeStyles((theme) => ({
       alignItems: 'center',
       justifyContent: 'space-between',
       width: 115
+  },
+  rated_recipes: {
+    marginTop: 25
   }
   }));
 
@@ -65,7 +67,7 @@ const SavedRecipePage = () => {
     useEffect(() => {
         axios.get('/api/view_saved/')
         .then((response) => {
-            console.log(response.data)
+        console.log(response.data)
         setRecipes(response.data);
         setLoading(false);
         }, (error) => {
@@ -117,9 +119,9 @@ const SavedRecipePage = () => {
             <>
                 <AppTopBar />
                 <Container fixed className={classes.container}>
-                  <Typography variant='h4' className={classes.title}> {recipes.length} Results</Typography>
+                  <Typography variant='h4' className={classes.title}>My Saved Recipes</Typography>
                   <GridList cellHeight={300} cols={width<breakpoint?2:3} spacing={10}>
-                    {recipes.map((tile) => (
+                    {recipes[0].map((tile) => (
                       <GridListTile className={classes.tile} key={tile.images[0]['id']}>
                         <img src={tile.images[0]['url']} alt={tile.title} />
                         <Link to={`/recipe/${tile.index}/`}>
@@ -143,16 +145,44 @@ const SavedRecipePage = () => {
                                     root: classes.titleBar,
                                     subtitle: classes.subtitle,
                                 }}
-                                // actionIcon={
-                                //     <IconButton aria-label={`star ${tile.title}`}>
-                                //         <StarBorderIcon className={classes.title} />
-                                //     </IconButton>
-                                // }
                             />
                          </Link>
                       </GridListTile>
                     ))}
                   </GridList>
+                  <div className={classes.rated_recipes}>
+                  <Typography variant='h4' className={classes.title}>My Rated Recipes</Typography>
+                  <GridList cellHeight={300} cols={width<breakpoint?2:3} spacing={10}>
+                    {recipes[1].map((tile) => (
+                      <GridListTile className={classes.tile} key={tile.images[0]['id']}>
+                        <img src={tile.images[0]['url']} alt={tile.title} />
+                        <Link to={`/recipe/${tile.index}/`}>
+                        <GridListTileBar
+                                title={tile.title}
+                            subtitle={<div className={classes.rating}><Rating
+                                readOnly="true"
+                                size="small"
+                                value={tile.avg_rating}
+                              /><Box>({tile.rating_count})</Box></div>}
+                            actionIcon={tile.count > 3 
+                                ?<div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
+                                    <Tooltip title="Healthier Choice">
+                                        <IconButton style={{ color: '#7FFF00' }}>
+                                            <CheckCircleOutlineIcon  />
+                                        </IconButton>
+                                    </Tooltip>
+                                </div>
+                                : ''}
+                                classes={{
+                                    root: classes.titleBar,
+                                    subtitle: classes.subtitle,
+                                }}
+                            />
+                         </Link>
+                      </GridListTile>
+                    ))}
+                  </GridList>
+                  </div>
                 </Container>
                 {/* <RecipeList searchResult={searchResult} /> */}
             </>
