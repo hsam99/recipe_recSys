@@ -33,18 +33,19 @@ class RecipeDetailSerializer(serializers.ModelSerializer):
     avg_rating = serializers.SerializerMethodField()
     rating_count = serializers.SerializerMethodField()
     saved = serializers.SerializerMethodField()
+    instructions = serializers.SerializerMethodField()
     tfidf_weight = serializers.SerializerMethodField() # Test
     cleaned_ingrs = serializers.SerializerMethodField() # Test
+    cleaned_title = serializers.SerializerMethodField() # Test
 
     class Meta:
         model = RecipeDetails
-        fields = ['index', 'title', 'images', 'ingredients', 'instructions', 'rating', 'avg_rating', 'rating_count', 'saved', 'healthiness_label', 'tfidf_weight', 'cleaned_ingrs']
+        fields = ['index', 'title', 'images', 'ingredients', 'instructions', 'rating', 'avg_rating', 'rating_count', 'saved', 'healthiness_label', 'tfidf_weight', 'cleaned_ingrs', 'cleaned_title']
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data['images'] = ast.literal_eval(data['images'])
         data['ingredients'] = ast.literal_eval(data['ingredients'])
-        data['instructions'] = ast.literal_eval(data['instructions'])
         data['healthiness_label'] = ast.literal_eval(data['healthiness_label'])
         return data
 
@@ -83,6 +84,14 @@ class RecipeDetailSerializer(serializers.ModelSerializer):
 
     def get_cleaned_ingrs(self, obj): 
         return RecipeEmbeddings.objects.get(index=obj.index).cleaned_ingrs
+
+    def get_cleaned_title(self, obj): 
+        return RecipeEmbeddings.objects.get(index=obj.index).cleaned_title
+
+    def get_instructions(self, obj):
+        instructions = ast.literal_eval(obj.instructions)
+        cleaned_instructions = [instruction for instruction in instructions if len(instruction['text']) > 3]
+        return cleaned_instructions
 
 
 class RecipeDisplaySerializer(serializers.ModelSerializer):

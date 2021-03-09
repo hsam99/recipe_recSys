@@ -134,3 +134,4 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 WORD2VEC_MODEL = os.path.join(BASE_DIR, 'word2vec model')
+LDA_MODEL = os.path.join(BASE_DIR, 'lda model')

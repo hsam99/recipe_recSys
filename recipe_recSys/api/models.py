@@ -56,7 +56,9 @@ class RecipeEmbeddings(models.Model):
     id = models.TextField(blank=True, null=True)
     tfidf_weight = models.TextField(blank=True, null=True)
     weighted_title_vec = models.TextField(blank=True, null=True)
-
+    ingr_vec = models.TextField(blank=True, null=True)
+    topic = models.IntegerField(blank=True, null=True)
+    
     class Meta:
         managed = True
         db_table = 'recipe_embeddings'
