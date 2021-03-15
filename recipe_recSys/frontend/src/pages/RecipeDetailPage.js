@@ -244,11 +244,15 @@ const FSADialog = (props) => {
           aria-describedby="alert-dialog-description"
         >
           <div className={classes.dialog}>
-              <DialogTitle id="alert-dialog-title">Additional Info</DialogTitle>
+              <DialogTitle id="alert-dialog-title">The Food Standards Agency (FSA) Traffic Light System</DialogTitle>
               <DialogContent>
-                  <DialogContentText>Your rating:</DialogContentText>
-                    Kari Lembu
-                  </DialogContent>
+                  <DialogContentText>
+                    The FSA traffic light system is used to determine how healthy a recipe is in terms of <strong>fat</strong>, <strong>salt</strong>, <strong>saturates</strong> and <strong>sugar</strong>
+                    . Red indicates the recipe is high 
+                    in a nutrient and you should try to cut down, and green means the product is low in that nutrient. 
+                    The more green labels the healthier is the recipe.
+                  </DialogContentText>
+                </DialogContent>
                   <DialogActions>
                   <Button onClick={handleClose} color="primary" size="small">
                       Close

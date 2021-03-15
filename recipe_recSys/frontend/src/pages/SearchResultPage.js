@@ -160,7 +160,7 @@ const SearchResultComponent = (query) => {
     }
     else {
       searchResult.sort((a, b) => { 
-        return -(a.count - b.count);
+        return -(a.similarity - b.similarity);
     })
     if('detail' in queryError){
       return (

@@ -13,7 +13,7 @@ connection = pymysql.connect(host='localhost',
 # create cursor
 cursor=connection.cursor()
 
-with open('./topics.json', 'r') as f:
+with open('./combined_vec.json', 'r') as f:
     data = json.load(f)
 
 data_df = pd.DataFrame(data)
@@ -25,7 +25,7 @@ cols = "`,`".join([str(i) for i in data_df.columns.tolist()])
 # Insert DataFrame recrds one by one.
 for i,row in data_df.iterrows():
 
-    sql = "UPDATE recipe_embeddings set topic='{}' where `index`={}".format(row['topic'], i+1)
+    sql = "UPDATE recipe_embeddings set combined_vec='{}' where `index`={}".format(row['combined_vec'], i+1)
     # sql = "INSERT INTO `recipe_embeddings` (`" +cols + "`) VALUES (" + "%s,"*(len(row)-1) + "%s)"
     cursor.execute(sql)
 

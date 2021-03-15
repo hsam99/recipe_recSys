@@ -58,6 +58,7 @@ class RecipeEmbeddings(models.Model):
     weighted_title_vec = models.TextField(blank=True, null=True)
     ingr_vec = models.TextField(blank=True, null=True)
     topic = models.IntegerField(blank=True, null=True)
+    combined_vec = models.TextField(blank=True, null=True)
     
     class Meta:
         managed = True

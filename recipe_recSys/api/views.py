@@ -78,11 +78,6 @@ class RecipeView(generics.ListAPIView):
 @permission_classes([IsAuthenticated])
 def recipe_query(request, q):
     print('incoming...')
-    # search_serializer = RecipeSearchSerializer(data=request.data)
-    # if search_serializer.is_valid(raise_exception=True):
-    #     query = search_serializer.data.get('query')
-    # else:
-    #     return Response('Invalid query')
     query_vec, query_topic = vectorize_query(q) # lda modification
     if query_vec is None:
         return Response({'detail': "Could not find '{}'.".format(q)}, status=status.HTTP_400_BAD_REQUEST)
@@ -114,7 +109,6 @@ def automatic_recommendation_view(request):
     if has_user_profile:
         recipe_recipe_recommendation = find_similar_recipes(user)
         profile_keyword_recommendation = find_profile_keyword(prototype_vector)
-        top_n_recipes, similarity_list = compute_similarity(prototype_vector, 0)
 
         explanation_sections = [profile_keyword_recommendation,
                                 recipe_recipe_recommendation, 
@@ -258,6 +252,7 @@ def vectorize_query(query):
     lemmatizer = WordNetLemmatizer()
     tokenizer = RegexpTokenizer(r'[a-zA-Z]{2,}')
     title_word2vec_model = RecipeSearchConfig.title_word2vec_model
+    combined_word2vec_model = RecipeSearchConfig.combined_word2vec_model # combined word2vec
     lda_model = RecipeSearchConfig.lda_model # lda modification
     corpus_dict = RecipeSearchConfig.corpus_dict # lda modification
 
@@ -272,15 +267,18 @@ def vectorize_query(query):
 
     if not query or not cleaned_query:
         return None
+    original_cleaned_query = []
+    for i in range(len(cleaned_query)):
+        original_cleaned_query.append(cleaned_query[i])
+        similar_word = combined_word2vec_model.wv.most_similar(positive=cleaned_query[i], topn=1)[0]
+        if similar_word[1] > 0.80:
+            cleaned_query.append(similar_word[0])
 
+    query_vec = (sum(combined_word2vec_model[original_cleaned_query])).reshape(1, -1) # combined word2vec
     query_doc2bow = corpus_dict.doc2bow(cleaned_query) # lda modification
     query_topic = max(lda_model[query_doc2bow],key=itemgetter(1))[0] # lda modification
-    for i in range(len(cleaned_query)):
-      similar_word = title_word2vec_model.wv.most_similar(positive=cleaned_query[i], topn=1)[0]
-      if similar_word[1] > 0.85:
-        cleaned_query.append(similar_word[0])
-    query_vec = (sum(title_word2vec_model[cleaned_query])).reshape(1, -1)
-
+    print(original_cleaned_query)
+    print(cleaned_query)
     return query_vec, query_topic # lda modification
 
 
@@ -289,26 +287,28 @@ def vectorize_query(query):
 #     random_index = random.sample(range(1, 402324), 402323)
 #     a = time.time()
 #     for num in range(10):
-#         index = random_index[num*2500:(num+1)*2500]
+#         index = random_index[num*500:(num+1)*500]
 #         if query == 1:
 #             n = 50
-#             recipes = RecipeEmbeddings.objects.filter(index__in=index, topic=query_topic).values_list('index', 'weighted_title_vec')
+#             recipes = RecipeEmbeddings.objects.filter(index__in=index).values_list('index', 'weighted_title_vec', 'topic')
 #         elif query == 0:
 #             n = 10
 #             recipes = RecipeEmbeddings.objects.filter(index__in=index).values_list('index', 'weighted_ingr_vec')
 #         similarity_list = []
 #         start_time = time.time()
-#         for idx, title_vec in recipes:
-#             if title_vec is None:
-#                 similarity = 0
+#         for idx, title_vec, topic in recipes:
+#             if topic == query_topic:
+#                 if title_vec is None:
+#                     similarity = 0
+#                 else:
+#                     similarity = cosine_similarity(query_vec, np.array(ast.literal_eval(title_vec))).item()
+#                     if similarity >= 0.65:
+#                         similarity_list.append((idx, similarity))
 #             else:
-#                 similarity = cosine_similarity(query_vec, np.array(ast.literal_eval(title_vec))).item()
-#             similarity_list.append((idx, similarity))
-#         elapsed_time = time.time() - start_time
-#         print('Elapsed_time: {}'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
+#                 pass
 #         similarity_list = sorted(similarity_list, key=lambda x: x[1], reverse=True)
-#         top_recipes = [recipe[0] for recipe in similarity_list if recipe[1] > 0.75 * (0.97**num)] # above threshold
-#         # top_recipes = [recipe[0] for recipe in similarity_list[0:n]] # top n recipes
+#         # top_recipes = [recipe[0] for recipe in similarity_list if recipe[1] > 0.75 * (0.97**num)] # above threshold
+#         top_recipes = [recipe[0] for recipe in similarity_list[0:n]] # top n recipes
 #         final_results.extend(top_recipes)
 #         print(final_results)
 #         if len(final_results) > n:
@@ -342,33 +342,44 @@ def vectorize_query(query):
 #     return top_n_recipes, similarity_list[0:n]
 
 
-def compute_similarity(query_vec, query, query_topic=1):
+def compute_similarity(query_vec, query, query_topic=-1):
     print('start')
-    threshold = 0.65
-    if query == 1:
-        n = 50
-        recipes = RecipeEmbeddings.objects.filter(topic=query_topic).values_list('index', 'weighted_title_vec')[:5000].iterator()
-    elif query == 0:
-        n = 10
-        recipes = RecipeEmbeddings.objects.values_list('index', 'weighted_ingr_vec')[:5000]
+    threshold = 0.50
     similarity_list = []
+    recipe_list = RecipeSearchConfig.recipe_list
     start_time = time.time()
-    for idx, title_vec in recipes:
-        if title_vec is None:
-            similarity = 0
+    if query == 1:
+        n = 100
+        count = 0
+        for recipe in recipe_list:
+            if recipe[4] == query_topic:
+                # similarity = cosine_similarity(query_vec, np.array(ast.literal_eval(recipe[1]))).item()
+                similarity = cosine_similarity(query_vec, np.array(ast.literal_eval(recipe[3]))).item() # combined word2vec
+                similarity_list.append((recipe[0], similarity))
+            else:
+                count += 1
+    elif query == 0:
+        n = 15
+        if query_topic != -1:
+            for recipe in recipe_list[0:100000]:
+                if recipe[4] == query_topic:
+                    similarity = cosine_similarity(query_vec, np.array(ast.literal_eval(recipe[3]))).item()
+                    # similarity = cosine_similarity(query_vec, np.array(ast.literal_eval(recipe[3]))).item() # combined word2vec
+                    similarity_list.append((recipe[0], similarity))
+                else:
+                    pass
         else:
-            similarity = cosine_similarity(query_vec, np.array(ast.literal_eval(title_vec))).item()
-            if similarity > threshold:
-                print(similarity)
-                similarity_list.append((idx, similarity))
-        if len(similarity_list) > n:
-            break
+            threshold = 0.60
+            for recipe in recipe_list[0:50000]:
+                similarity = cosine_similarity(query_vec, np.array(ast.literal_eval(recipe[2]))).item()
+                # similarity = cosine_similarity(query_vec, np.array(ast.literal_eval(recipe[3]))).item() # combined word2vec
+                similarity_list.append((recipe[0], similarity))
+
     elapsed_time = time.time() - start_time
     print('Elapsed_time: {}'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
     similarity_list = sorted(similarity_list, key=lambda x: x[1], reverse=True)
     top_n_recipes = [recipe[0] for recipe in similarity_list[0:n]]
     print(similarity_list[0:50])
-
     return top_n_recipes, similarity_list[0:n]
 
 
@@ -377,19 +388,21 @@ def find_profile_keyword(prototype_vector):
     print(ingr_word2vec_model.similar_by_vector(np.array(prototype_vector).reshape(-1), topn=5))
     keyword = ingr_word2vec_model.similar_by_vector(np.array(prototype_vector).reshape(-1), topn=1)[0][0]
     keyword_vec = ingr_word2vec_model[keyword].reshape(1, -1)
-    top_n_recipes, similarity_list = compute_similarity(keyword_vec, 0)
+    top_n_recipes, similarity_list = compute_similarity(prototype_vector, 0)
 
     recipe_objects = RecipeDetails.objects.filter(index__in=top_n_recipes)
     recipe_det_serializer = RecipeDisplaySerializer(recipe_objects, context={'similarity': similarity_list}, many=True)
     formatted_keyword = ' '.join(keyword.split('_'))
 
-    return({'explanation': "From recipes that you have rated in the past, these recipes are recommended because they have the ingredient '{}'".format(formatted_keyword),
+    return({'explanation': "From recipes that you have rated in the past, these recipes are recommended",
             'recipes': recipe_det_serializer.data,
             'index': None,
             'link': False})
 
 
 def find_similar_recipes(user):
+    lda_model = RecipeSearchConfig.lda_model # lda modification
+    corpus_dict = RecipeSearchConfig.corpus_dict # lda modification
     try:
         highly_rated_recipe = RecipeRating.objects.filter(user=user, rating__gte=3).order_by('?')[0]
     except:
@@ -397,9 +410,14 @@ def find_similar_recipes(user):
     recipe_rating = highly_rated_recipe.rating
     recipe_title = highly_rated_recipe.recipe.title
     recipe_idx = highly_rated_recipe.recipe.index
+    recipe_vec = ast.literal_eval(RecipeEmbeddings.objects.get(index=recipe_idx).combined_vec) # combined word2vec
+    recipe_ingredients = ast.literal_eval(RecipeEmbeddings.objects.get(index=recipe_idx).cleaned_ingrs)
     recipe_embedding = ast.literal_eval(RecipeEmbeddings.objects.get(index=recipe_idx).weighted_ingr_vec)
+    query_doc2bow = corpus_dict.doc2bow(recipe_ingredients) # lda modification
+    query_topic = max(lda_model[query_doc2bow],key=itemgetter(1))[0] # lda modification
 
-    top_n_recipes, similarity_list = compute_similarity(recipe_embedding, 0)
+    top_n_recipes, similarity_list = compute_similarity(recipe_vec, 0, query_topic)
+    # top_n_recipes, similarity_list = compute_similarity(recipe_vec, 0, query_topic) # combined word2vec
     recipe_objects = RecipeDetails.objects.filter(index__in=top_n_recipes)
     recipe_det_serializer = RecipeDisplaySerializer(recipe_objects, context={'similarity': similarity_list}, many=True)
     recipe_list = recipe_det_serializer.data
@@ -410,7 +428,7 @@ def find_similar_recipes(user):
             break
 
     return({
-        'explanation': 'Recipes similar to :{};, which you have rated {}'.format(recipe_title, recipe_rating), 
+        'explanation': 'These recipes are recommended because you gave :{}; a rating of {}'.format(recipe_title, recipe_rating), 
         'recipes': recipe_list,
         'index': recipe_idx,
         'link': True
@@ -430,7 +448,7 @@ def get_high_rated_recipes():
     random.shuffle(recipe_list)
 
     return({
-        'explanation': 'Recipes Rated 4 and Above', 
+        'explanation': 'Highly rated recipes', 
         'recipes': recipe_list[0:10], 
         'index': None, 
         'link': False
