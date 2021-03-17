@@ -388,19 +388,36 @@ def compute_similarity(query_vec, query, query_topic=-1):
 
 def find_profile_keyword(prototype_vector, username):
     profile_key = username + '_profile'
-    ingr_word2vec_model = RecipeSearchConfig.ingr_word2vec_model
-    print(ingr_word2vec_model.similar_by_vector(np.array(prototype_vector).reshape(-1), topn=5))
-    keyword = ingr_word2vec_model.similar_by_vector(np.array(prototype_vector).reshape(-1), topn=1)[0][0]
-    keyword_vec = ingr_word2vec_model[keyword].reshape(1, -1)
-    top_n_recipes, similarity_list = compute_similarity(prototype_vector, 0)
+    if cache.get(profile_key) == None:
+        # ingr_word2vec_model = RecipeSearchConfig.ingr_word2vec_model
+        # print(ingr_word2vec_model.similar_by_vector(np.array(prototype_vector).reshape(-1), topn=5))
+        # keyword = ingr_word2vec_model.similar_by_vector(np.array(prototype_vector).reshape(-1), topn=1)[0][0]
+        # keyword_vec = ingr_word2vec_model[keyword].reshape(1, -1)
+        top_n_recipes, similarity_list = compute_similarity(prototype_vector, 0)
 
-    recipe_objects = RecipeDetails.objects.filter(index__in=top_n_recipes)
-    recipe_det_serializer = RecipeDisplaySerializer(recipe_objects, context={'similarity': similarity_list}, many=True)
-    formatted_keyword = ' '.join(keyword.split('_'))
-    explanation_dict = {'explanation': "From recipes that you have rated in the past, these recipes are recommended",
-                        'recipes': recipe_det_serializer.data,
-                        'index': None,
-                        'link': False}
+        recipe_objects = RecipeDetails.objects.filter(index__in=top_n_recipes)
+        recipe_det_serializer = RecipeDisplaySerializer(recipe_objects, context={'similarity': similarity_list}, many=True)
+        # formatted_keyword = ' '.join(keyword.split('_'))
+        explanation_dict = {'explanation': "From recipes that you have rated in the past, these recipes are recommended",
+                            'recipes': recipe_det_serializer.data,
+                            'index': None,
+                            'link': False,
+                            'prototype_vector': prototype_vector}
+        cache.set(profile_key, explanation_dict)
+    else:
+        if prototype_vector != cache.get(profile_key)['prototype_vector']:
+            top_n_recipes, similarity_list = compute_similarity(prototype_vector, 0)
+
+            recipe_objects = RecipeDetails.objects.filter(index__in=top_n_recipes)
+            recipe_det_serializer = RecipeDisplaySerializer(recipe_objects, context={'similarity': similarity_list}, many=True)
+            explanation_dict = {'explanation': "From recipes that you have rated in the past, these recipes are recommended",
+                                'recipes': recipe_det_serializer.data,
+                                'index': None,
+                                'link': False,
+                                'prototype_vector': prototype_vector}
+            cache.set(profile_key, explanation_dict)
+
+        explanation_dict = cache.get(profile_key)
 
     return(explanation_dict)
 
@@ -415,29 +432,40 @@ def find_similar_recipes(user):
     recipe_rating = highly_rated_recipe.rating
     recipe_title = highly_rated_recipe.recipe.title
     recipe_idx = highly_rated_recipe.recipe.index
-    recipe_vec = ast.literal_eval(RecipeEmbeddings.objects.get(index=recipe_idx).combined_vec) # combined word2vec
-    recipe_ingredients = ast.literal_eval(RecipeEmbeddings.objects.get(index=recipe_idx).cleaned_ingrs)
-    recipe_embedding = ast.literal_eval(RecipeEmbeddings.objects.get(index=recipe_idx).weighted_ingr_vec)
-    query_doc2bow = corpus_dict.doc2bow(recipe_ingredients) # lda modification
-    query_topic = max(lda_model[query_doc2bow],key=itemgetter(1))[0] # lda modification
+    recipe_key = 'recipe_' + str(recipe_idx)
+    print(recipe_key)
+    if cache.get(recipe_key) == None: 
+        recipe_vec = ast.literal_eval(RecipeEmbeddings.objects.get(index=recipe_idx).combined_vec) # combined word2vec
+        recipe_ingredients = ast.literal_eval(RecipeEmbeddings.objects.get(index=recipe_idx).cleaned_ingrs)
+        # recipe_embedding = ast.literal_eval(RecipeEmbeddings.objects.get(index=recipe_idx).weighted_ingr_vec)
+        query_doc2bow = corpus_dict.doc2bow(recipe_ingredients) # lda modification
+        query_topic = max(lda_model[query_doc2bow],key=itemgetter(1))[0] # lda modification
 
-    top_n_recipes, similarity_list = compute_similarity(recipe_vec, 0, query_topic)
-    # top_n_recipes, similarity_list = compute_similarity(recipe_vec, 0, query_topic) # combined word2vec
-    recipe_objects = RecipeDetails.objects.filter(index__in=top_n_recipes)
-    recipe_det_serializer = RecipeDisplaySerializer(recipe_objects, context={'similarity': similarity_list}, many=True)
-    recipe_list = recipe_det_serializer.data
-    for i in range(len(recipe_list)):
-        if recipe_list[i]['index'] == recipe_idx:
-            print('they pop')
-            a = recipe_list.pop(i)
-            break
+        top_n_recipes, similarity_list = compute_similarity(recipe_vec, 0, query_topic)
+        recipe_objects = RecipeDetails.objects.filter(index__in=top_n_recipes)
+        recipe_det_serializer = RecipeDisplaySerializer(recipe_objects, context={'similarity': similarity_list}, many=True)
+        recipe_list = recipe_det_serializer.data
+        for i in range(len(recipe_list)):
+            if recipe_list[i]['index'] == recipe_idx:
+                print('they pop')
+                a = recipe_list.pop(i)
+                break
+        cache.set(recipe_key, recipe_list)
 
-    return({
-        'explanation': 'These recipes are recommended because you gave :{}; a rating of {}'.format(recipe_title, recipe_rating), 
-        'recipes': recipe_list,
-        'index': recipe_idx,
-        'link': True
-    })
+        return({
+            'explanation': 'These recipes are recommended because you gave :{}; a rating of {}'.format(recipe_title, recipe_rating), 
+            'recipes': recipe_list,
+            'index': recipe_idx,
+            'link': True
+        })
+
+    else:
+        return({
+            'explanation': 'These recipes are recommended because you gave :{}; a rating of {}'.format(recipe_title, recipe_rating), 
+            'recipes': cache.get(recipe_key),
+            'index': recipe_idx,
+            'link': True
+        })
 
 
 def get_high_rated_recipes():
