@@ -176,7 +176,7 @@ const SearchResultComponent = (query) => {
           <div>
               <AppTopBar />
               <Container fixed className={classes.container}>
-                <Typography variant='h4' className={classes.title}> {searchResult.length} Results</Typography>
+                <Typography variant='h4' className={classes.title}>'{query}' - {searchResult.length} Results</Typography>
                 <GridList cellHeight={300} cols={width<breakpoint?2:3} spacing={10}>
                   {searchResult.map((tile) => (
                     <GridListTile className={classes.tile} key={tile.images[0]['id']}>

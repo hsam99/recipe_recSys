@@ -25,6 +25,6 @@ class RecipeSearchConfig(AppConfig):
     combined_word2vec_model = Word2Vec.load(combined_word2vec_path)
     lda_model = LdaMulticore.load(lda_model_path)
     corpus_dict = gensim.corpora.dictionary.Dictionary.load(corpus_dict_path)
-    recipes = RecipeEmbeddings.objects.values_list('index', 'weighted_title_vec', 'weighted_ingr_vec', 'combined_vec', 'topic')[0:200000]
+    recipes = RecipeEmbeddings.objects.values_list('index', 'weighted_title_vec', 'weighted_ingr_vec', 'combined_vec', 'topic')[0:5000]
     recipe_list = [recipe for recipe in recipes]
     print('Elapsed_time: {}'.format(time.strftime("%H:%M:%S", time.gmtime(time.time()-a))))

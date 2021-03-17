@@ -135,3 +135,11 @@ STATIC_URL = '/static/'
 
 WORD2VEC_MODEL = os.path.join(BASE_DIR, 'word2vec model')
 LDA_MODEL = os.path.join(BASE_DIR, 'lda model')
+
+#DataFlair #File System Cache
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': os.path.join(BASE_DIR, 'data_cache', 'Cache'),
+    }
+}

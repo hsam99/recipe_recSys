@@ -26,6 +26,8 @@ from django.http import JsonResponse
 from django.contrib.auth.models import User
 from rest_framework.permissions import IsAuthenticated
 from operator import itemgetter
+from django.views.decorators.cache import cache_page
+from django.core.cache import cache
 
 
 @api_view(['POST'])
@@ -74,6 +76,7 @@ class RecipeView(generics.ListAPIView):
     serializer_class = RecipeDisplaySerializer
 
 
+@cache_page(60 * 15)
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def recipe_query(request, q):
@@ -108,7 +111,7 @@ def automatic_recommendation_view(request):
     highly_rated_recipe = get_high_rated_recipes()
     if has_user_profile:
         recipe_recipe_recommendation = find_similar_recipes(user)
-        profile_keyword_recommendation = find_profile_keyword(prototype_vector)
+        profile_keyword_recommendation = find_profile_keyword(prototype_vector, user.username)
 
         explanation_sections = [profile_keyword_recommendation,
                                 recipe_recipe_recommendation, 
@@ -271,7 +274,7 @@ def vectorize_query(query):
     for i in range(len(cleaned_query)):
         original_cleaned_query.append(cleaned_query[i])
         similar_word = combined_word2vec_model.wv.most_similar(positive=cleaned_query[i], topn=1)[0]
-        if similar_word[1] > 0.80:
+        if similar_word[1] > 0.70:
             cleaned_query.append(similar_word[0])
 
     query_vec = (sum(combined_word2vec_model[original_cleaned_query])).reshape(1, -1) # combined word2vec
@@ -361,7 +364,7 @@ def compute_similarity(query_vec, query, query_topic=-1):
     elif query == 0:
         n = 15
         if query_topic != -1:
-            for recipe in recipe_list[0:100000]:
+            for recipe in recipe_list:
                 if recipe[4] == query_topic:
                     similarity = cosine_similarity(query_vec, np.array(ast.literal_eval(recipe[3]))).item()
                     # similarity = cosine_similarity(query_vec, np.array(ast.literal_eval(recipe[3]))).item() # combined word2vec
@@ -383,7 +386,8 @@ def compute_similarity(query_vec, query, query_topic=-1):
     return top_n_recipes, similarity_list[0:n]
 
 
-def find_profile_keyword(prototype_vector):
+def find_profile_keyword(prototype_vector, username):
+    profile_key = username + '_profile'
     ingr_word2vec_model = RecipeSearchConfig.ingr_word2vec_model
     print(ingr_word2vec_model.similar_by_vector(np.array(prototype_vector).reshape(-1), topn=5))
     keyword = ingr_word2vec_model.similar_by_vector(np.array(prototype_vector).reshape(-1), topn=1)[0][0]
@@ -393,11 +397,12 @@ def find_profile_keyword(prototype_vector):
     recipe_objects = RecipeDetails.objects.filter(index__in=top_n_recipes)
     recipe_det_serializer = RecipeDisplaySerializer(recipe_objects, context={'similarity': similarity_list}, many=True)
     formatted_keyword = ' '.join(keyword.split('_'))
+    explanation_dict = {'explanation': "From recipes that you have rated in the past, these recipes are recommended",
+                        'recipes': recipe_det_serializer.data,
+                        'index': None,
+                        'link': False}
 
-    return({'explanation': "From recipes that you have rated in the past, these recipes are recommended",
-            'recipes': recipe_det_serializer.data,
-            'index': None,
-            'link': False})
+    return(explanation_dict)
 
 
 def find_similar_recipes(user):
