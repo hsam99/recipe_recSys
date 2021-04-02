@@ -59,6 +59,7 @@ class RecipeEmbeddings(models.Model):
     ingr_vec = models.TextField(blank=True, null=True)
     topic = models.IntegerField(blank=True, null=True)
     combined_vec = models.TextField(blank=True, null=True)
+    recipe_embedding = models.TextField(blank=True, null=True)
     
     class Meta:
         managed = True

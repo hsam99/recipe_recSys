@@ -109,13 +109,15 @@ def automatic_recommendation_view(request):
         print('bye')
 
     highly_rated_recipe = get_high_rated_recipes()
+    healthy_recipe = get_healthy_recipes()
     if has_user_profile:
         recipe_recipe_recommendation = find_similar_recipes(user)
         profile_keyword_recommendation = find_profile_keyword(prototype_vector, user.username)
 
         explanation_sections = [profile_keyword_recommendation,
                                 recipe_recipe_recommendation, 
-                                highly_rated_recipe]
+                                highly_rated_recipe,
+                                healthy_recipe]
         valid_explanation_sections = []
 
         for section in range(len(explanation_sections)):
@@ -131,7 +133,7 @@ def automatic_recommendation_view(request):
         )
     else:
         return JsonResponse(
-            [highly_rated_recipe],
+            [highly_rated_recipe, healthy_recipe],
             status=status.HTTP_200_OK,
             safe=False
         )
@@ -224,21 +226,27 @@ def prototype_vector(user, flag):
     positive_rating_threshold = 3
     all_positive_recipe = list(RecipeRating.objects.filter(user=user, rating__gte=positive_rating_threshold).values_list('recipe', 'rating'))
     all_negative_recipe = list(RecipeRating.objects.filter(user=user, rating__lt=positive_rating_threshold).values_list('recipe', 'rating'))
-    positive_prototype = np.zeros((1,100))
-    negative_prototype = np.zeros((1,100))
+    positive_prototype = np.zeros((1, 100))
+    negative_prototype = np.zeros((1, 100))
 
     if len(all_positive_recipe) != 0:
         for recipe in all_positive_recipe:
-            positive_prototype = positive_prototype + (np.array(ast.literal_eval(RecipeEmbeddings.objects.get(index=recipe[0]).weighted_ingr_vec)) * int(recipe[1] - 2))
+            positive_prototype = positive_prototype + (np.array(ast.literal_eval(RecipeEmbeddings.objects.get(index=recipe[0]).combined_vec)) * int(recipe[1] - 2))
 
     if len(all_negative_recipe) != 0:    
         for recipe in all_negative_recipe:
-            negative_prototype = negative_prototype + (np.array(ast.literal_eval(RecipeEmbeddings.objects.get(index=recipe[0]).weighted_ingr_vec)) * int(2/recipe[1]))
+            negative_prototype = negative_prototype + (np.array(ast.literal_eval(RecipeEmbeddings.objects.get(index=recipe[0]).combined_vec)) * int(2/recipe[1]))
     
     positive_prototype = positive_prototype / (1 if len(all_positive_recipe) == 0 else len(all_positive_recipe))
     negative_prototype = negative_prototype / (1 if len(all_negative_recipe) == 0 else len(all_negative_recipe))
-    
-    prototype_vector = np.array2string(0.85*positive_prototype - 0.5*negative_prototype, separator=', ')
+
+    if len(all_positive_recipe) == 0 and len(all_negative_recipe) != 0:
+        print('heya')
+        prototype_vector = np.zeros((1, 100))
+    else:
+        print('wecool')
+        prototype_vector = np.array2string(0.85*positive_prototype - 0.25*negative_prototype, separator=', ')
+
     if flag == 0:
         print(0)
         UserProfile.objects.create(user=user, prototype_vector=prototype_vector) 
@@ -285,98 +293,57 @@ def vectorize_query(query):
     return query_vec, query_topic # lda modification
 
 
-# def compute_similarity(query_vec, query, query_topic=1):
-#     final_results = []
-#     random_index = random.sample(range(1, 402324), 402323)
-#     a = time.time()
-#     for num in range(10):
-#         index = random_index[num*500:(num+1)*500]
-#         if query == 1:
-#             n = 50
-#             recipes = RecipeEmbeddings.objects.filter(index__in=index).values_list('index', 'weighted_title_vec', 'topic')
-#         elif query == 0:
-#             n = 10
-#             recipes = RecipeEmbeddings.objects.filter(index__in=index).values_list('index', 'weighted_ingr_vec')
-#         similarity_list = []
-#         start_time = time.time()
-#         for idx, title_vec, topic in recipes:
-#             if topic == query_topic:
-#                 if title_vec is None:
-#                     similarity = 0
-#                 else:
-#                     similarity = cosine_similarity(query_vec, np.array(ast.literal_eval(title_vec))).item()
-#                     if similarity >= 0.65:
-#                         similarity_list.append((idx, similarity))
-#             else:
-#                 pass
-#         similarity_list = sorted(similarity_list, key=lambda x: x[1], reverse=True)
-#         # top_recipes = [recipe[0] for recipe in similarity_list if recipe[1] > 0.75 * (0.97**num)] # above threshold
-#         top_recipes = [recipe[0] for recipe in similarity_list[0:n]] # top n recipes
-#         final_results.extend(top_recipes)
-#         print(final_results)
-#         if len(final_results) > n:
-#             break
-#     elapsed_time = time.time() - a
-#     print('Elapsed_time: {}'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
-#     return final_results, similarity_list[0:n]
-
-
-# def compute_similarity(query_vec, query, query_topic=1):
-#     if query == 1:
-#         n = 50
-#         recipes = RecipeEmbeddings.objects.values_list('index', 'weighted_title_vec')[:5000]
-#     elif query == 0:
-#         n = 10
-#         recipes = RecipeEmbeddings.objects.values_list('index', 'weighted_ingr_vec')[:5000]
-#     similarity_list = []
-#     start_time = time.time()
-#     for idx, title_vec in recipes:
-#         if title_vec is None:
-#             similarity = 0
-#         else:
-#             similarity = cosine_similarity(query_vec, np.array(ast.literal_eval(title_vec))).item()
-#         similarity_list.append((idx, similarity))
-#     elapsed_time = time.time() - start_time
-#     print('Elapsed_time: {}'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
-#     similarity_list = sorted(similarity_list, key=lambda x: x[1], reverse=True)
-#     top_n_recipes = [recipe[0] for recipe in similarity_list[0:n]]
-#     print(similarity_list[0:50])
-
-#     return top_n_recipes, similarity_list[0:n]
-
-
 def compute_similarity(query_vec, query, query_topic=-1):
     print('start')
-    threshold = 0.50
     similarity_list = []
     recipe_list = RecipeSearchConfig.recipe_list
     start_time = time.time()
+    print(query_topic)
     if query == 1:
-        n = 100
         count = 0
+        threshold = 0.65
+        n = 50
+        recipe_list = list(filter(lambda x:x[2] == query_topic, recipe_list))
         for recipe in recipe_list:
-            if recipe[4] == query_topic:
-                # similarity = cosine_similarity(query_vec, np.array(ast.literal_eval(recipe[1]))).item()
-                similarity = cosine_similarity(query_vec, np.array(ast.literal_eval(recipe[3]))).item() # combined word2vec
+            count += 1
+            # similarity = cosine_similarity(query_vec, np.array(ast.literal_eval(recipe[1]))).item()
+            similarity = cosine_similarity(query_vec, recipe[1]).item() # combined word2vec
+            if similarity >= threshold:
                 similarity_list.append((recipe[0], similarity))
             else:
-                count += 1
+                pass
+            
+            if len(similarity_list) > n:
+                break
+        print(count)
+
     elif query == 0:
+        threshold = 0.75
+        similarity_list2 = []
         n = 15
         if query_topic != -1:
+            recipe_list = list(filter(lambda x:x[2] == query_topic, recipe_list))
             for recipe in recipe_list:
-                if recipe[4] == query_topic:
-                    similarity = cosine_similarity(query_vec, np.array(ast.literal_eval(recipe[3]))).item()
-                    # similarity = cosine_similarity(query_vec, np.array(ast.literal_eval(recipe[3]))).item() # combined word2vec
-                    similarity_list.append((recipe[0], similarity))
-                else:
-                    pass
-        else:
-            threshold = 0.60
-            for recipe in recipe_list[0:50000]:
-                similarity = cosine_similarity(query_vec, np.array(ast.literal_eval(recipe[2]))).item()
-                # similarity = cosine_similarity(query_vec, np.array(ast.literal_eval(recipe[3]))).item() # combined word2vec
+                similarity = cosine_similarity(query_vec, recipe[1]).item()
                 similarity_list.append((recipe[0], similarity))
+                if similarity >= threshold:
+                    # similarity = cosine_similarity(query_vec, np.array(ast.literal_eval(recipe[3]))).item() # combined word2vec
+                    similarity_list2.append((recipe[0], similarity))
+                if len(similarity_list2) > n:
+                    similarity_list = similarity_list2.copy()
+                    break
+        else:
+            threshold = 0.70
+            similarity_list2 = []
+            for recipe in recipe_list[0:50000]:
+                similarity = cosine_similarity(query_vec, recipe[1]).item()
+                similarity_list.append((recipe[0], similarity))
+                if similarity >= threshold:
+                    # similarity = cosine_similarity(query_vec, np.array(ast.literal_eval(recipe[3]))).item() # combined word2vec
+                    similarity_list2.append((recipe[0], similarity))
+                if len(similarity_list2) > n:
+                    similarity_list = similarity_list2.copy()
+                    break
 
     elapsed_time = time.time() - start_time
     print('Elapsed_time: {}'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
@@ -486,3 +453,24 @@ def get_high_rated_recipes():
         'index': None, 
         'link': False
     })
+
+
+def get_healthy_recipes():
+    print('healthy')
+    recipe_objects = RecipeDetails.objects.all()[0:1000]
+    recipe_list = RecipeDisplaySerializer(recipe_objects, context={'similarity': []}, many=True).data
+    healthy_recipe = list(filter(lambda x: x['count'] == 4, recipe_list))
+
+    return({
+        'explanation': 'Healthier choices', 
+        'recipes': healthy_recipe[0:15], 
+        'index': None, 
+        'link': False
+    })
+
+
+def is_healthy():
+    for i in ls.healthiness_label:
+        if i[0] != 1:
+            return False
+    return True

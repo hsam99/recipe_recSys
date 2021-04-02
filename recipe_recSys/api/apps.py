@@ -6,6 +6,8 @@ from gensim.models import Word2Vec
 from gensim.models import LdaMulticore
 from .models import RecipeEmbeddings
 import time
+import numpy as np
+import ast
 
 class RecipeSearchConfig(AppConfig):
     name = 'api'
@@ -25,6 +27,6 @@ class RecipeSearchConfig(AppConfig):
     combined_word2vec_model = Word2Vec.load(combined_word2vec_path)
     lda_model = LdaMulticore.load(lda_model_path)
     corpus_dict = gensim.corpora.dictionary.Dictionary.load(corpus_dict_path)
-    recipes = RecipeEmbeddings.objects.values_list('index', 'weighted_title_vec', 'weighted_ingr_vec', 'combined_vec', 'topic')[0:200000]
-    recipe_list = [recipe for recipe in recipes]
+    recipes = RecipeEmbeddings.objects.values_list('index', 'combined_vec', 'topic')[0:200000]
+    recipe_list = np.array([(recipe[0], np.array(ast.literal_eval(recipe[1])), recipe[2]) for recipe in recipes], dtype=object)
     print('Elapsed_time: {}'.format(time.strftime("%H:%M:%S", time.gmtime(time.time()-a))))
