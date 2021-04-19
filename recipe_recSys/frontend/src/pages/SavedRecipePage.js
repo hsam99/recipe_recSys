@@ -18,14 +18,14 @@ import IconButton from '@material-ui/core/IconButton';
 
 const useStyles = makeStyles((theme) => ({
     root: {
-      overflow: 'hidden',
+      overflow: 'auto',
     },
     container: {
       backgroundColor: 'whitesmoke',
-      height: '100%',
+      height: '80%',
       width: '100%',
       marginTop: 35,
-      marginBottom: 50
+      marginBottom: 50,
     },
     tile: {
       marginBottom: 15,
@@ -49,7 +49,16 @@ const useStyles = makeStyles((theme) => ({
       width: 115
   },
   rated_recipes: {
-    marginTop: 25
+    marginTop: 25,
+  },
+  saved_recipes: {
+  },
+  message: {
+    display: 'flex',
+  },
+  message2: {
+    display: 'flex',
+    marginBottom: 75
   }
   }));
 
@@ -67,7 +76,6 @@ const SavedRecipePage = () => {
     useEffect(() => {
         axios.get('/api/view_saved/')
         .then((response) => {
-        console.log(response.data)
         setRecipes(response.data);
         setLoading(false);
         }, (error) => {
@@ -119,7 +127,9 @@ const SavedRecipePage = () => {
             <>
                 <AppTopBar />
                 <Container fixed className={classes.container}>
+                  <div className={classes.saved_recipes}>
                   <Typography variant='h4' className={classes.title}>My Saved Recipes</Typography>
+                  {recipes[0].length == 0 ? <Typography className={classes.message} variant='h5'>No saved recipes</Typography> : <p></p>}
                   <GridList cellHeight={300} cols={width<breakpoint?2:3} spacing={10}>
                     {recipes[0].map((tile) => (
                       <GridListTile className={classes.tile} key={tile.images[0]['id']}>
@@ -151,8 +161,10 @@ const SavedRecipePage = () => {
                       </GridListTile>
                     ))}
                   </GridList>
+                  </div>
                   <div className={classes.rated_recipes}>
                   <Typography variant='h4' className={classes.title}>My Rated Recipes</Typography>
+                  {recipes[1].length == 0 ? <Typography className={classes.message2} variant='h5'>No rated recipes</Typography> : <p></p>}
                   <GridList cellHeight={300} cols={width<breakpoint?2:3} spacing={10}>
                     {recipes[1].map((tile) => (
                       <GridListTile className={classes.tile} key={tile.images[0]['id']}>

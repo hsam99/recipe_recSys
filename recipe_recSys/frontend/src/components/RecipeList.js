@@ -50,7 +50,6 @@ const useStyles = makeStyles((theme) => ({
 
 const formatString = (str, index) => {
     const split_str = str.split(/[:;]/);
-    console.log(split_str[2].slice(0))
     return(
         <span>{split_str[0]} <Link to={`/recipe/${index}/`}> {split_str[1]} </Link> {split_str[2]}</span>
     )

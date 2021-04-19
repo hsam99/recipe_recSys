@@ -87,7 +87,6 @@ export default function SignUpPage(props) {
       }
     })
     .then((response) => {
-      console.log(response.data)
       setUserCreated(true)
     }, (error) => {
       setHelperText(error.response.data);

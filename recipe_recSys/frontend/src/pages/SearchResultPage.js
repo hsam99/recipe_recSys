@@ -103,7 +103,6 @@ const SearchResultComponent = (query) => {
     if (loading) {
       axios.get(`/api/search/${query}/`)
       .then((response) => {
-        console.log(response.data)
         setQueryError({});
         setLoading(false);
         setResult(response.data);

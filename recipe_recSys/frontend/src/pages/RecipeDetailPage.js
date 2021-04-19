@@ -116,6 +116,7 @@ const useStyles = makeStyles((theme) => ({
         
     },
     instructionList: {
+        minWidth: 350,
         maxWidth: 500,
         [theme.breakpoints.only('md')]: {
             maxWidth: 400
@@ -176,7 +177,6 @@ const RatingDialog = (props) => {
           })
           .then((response) => {
             setUpdate(true);
-            console.log(response.data)
           }, (error) => {
             console.log(error.response.data);
           });
@@ -187,7 +187,6 @@ const RatingDialog = (props) => {
     if (update === true){
         axios.get(`/api/recipe/${recipe_idx}/`)
         .then((response) => {
-        console.log(response)
         setDetail(response.data);
         setUpdate(false);
         }, (error) => {
@@ -249,7 +248,7 @@ const FSADialog = (props) => {
                   <DialogContentText>
                     The FSA traffic light system is used to determine how healthy a recipe is in terms of <strong>fat</strong>, <strong>salt</strong>, <strong>saturates</strong> and <strong>sugar</strong>
                     . Red indicates the recipe is high 
-                    in a nutrient and you should try to cut down, and green means the product is low in that nutrient. 
+                    in a nutrient and you should try to cut down, and green means the recipe is low in that nutrient. 
                     The more green labels the healthier is the recipe.
                   </DialogContentText>
                 </DialogContent>
@@ -322,7 +321,6 @@ const RecipeDetailPage = (props) => {
     useEffect(() => {
         axios.get(`/api/recipe/${idx}/`)
         .then((response) => {
-        console.log(response)
         setDetail(response.data)
         setLoading(false)
         }, (error) => {
@@ -437,9 +435,7 @@ const RecipeDetailPage = (props) => {
                         </List>
                     </div>
                 </Box>
-                {/* Testing */}
-                <p>{detail.cleaned_title}</p>  
-                <p>{detail.cleaned_ingrs}</p>
+
                 </Container>
                 <RatingDialog open={open} onClose={handleClose} recipe_idx={idx} prev_rating={detail.rating} setDetail={setDetail}/>
                 <FSADialog open={fsaOpen} onClose={handleFsaClose}/>

@@ -73,10 +73,8 @@ class RecipeDetailSerializer(serializers.ModelSerializer):
     def get_saved(self, obj):
         user = self.context['request'].user
         if user in obj.saved.all():
-            print('True')
             return True
         else:
-            print('False')
             return False
 
     def get_tfidf_weight(self, obj): 

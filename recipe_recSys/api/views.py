@@ -80,7 +80,6 @@ class RecipeView(generics.ListAPIView):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def recipe_query(request, q):
-    print('incoming...')
     query_vec, query_topic = vectorize_query(q) # lda modification
     if query_vec is None:
         return Response({'detail': "Could not find '{}'.".format(q)}, status=status.HTTP_400_BAD_REQUEST)
@@ -95,10 +94,9 @@ def recipe_query(request, q):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def automatic_recommendation_view(request):
-    ingr_word2vec_model = RecipeSearchConfig.ingr_word2vec_model
     user = request.user
     has_user_profile = True
-    # print(ingr_word2vec_model.most_similar(positive=['rice'], topn=5))
+
     try:
         prototype_vector = ast.literal_eval(UserProfile.objects.get(user=user).prototype_vector)
         
@@ -106,7 +104,6 @@ def automatic_recommendation_view(request):
             has_user_profile = False
     except:
         has_user_profile = False
-        print('bye')
 
     highly_rated_recipe = get_high_rated_recipes()
     healthy_recipe = get_healthy_recipes()
@@ -141,8 +138,6 @@ def automatic_recommendation_view(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_recipe_detail(request, idx):
-    print(request.user)
-    print('incoming...')
     target_recipe = RecipeDetails.objects.get(index=idx)
     recipe_det_serializer = RecipeDetailSerializer(target_recipe, context={'request': request})
     return Response(recipe_det_serializer.data, status=status.HTTP_200_OK)
@@ -241,18 +236,14 @@ def prototype_vector(user, flag):
     negative_prototype = negative_prototype / (1 if len(all_negative_recipe) == 0 else len(all_negative_recipe))
 
     if len(all_positive_recipe) == 0 and len(all_negative_recipe) != 0:
-        print('heya')
         prototype_vector = np.zeros((1, 100))
     else:
-        print('wecool')
         prototype_vector = np.array2string(0.85*positive_prototype - 0.25*negative_prototype, separator=', ')
 
     if flag == 0:
-        print(0)
         UserProfile.objects.create(user=user, prototype_vector=prototype_vector) 
 
     elif flag == 1:
-        print(1)
         target_user = UserProfile.objects.get(user=user)
         target_user.prototype_vector = prototype_vector
         target_user.save()
@@ -262,7 +253,7 @@ def vectorize_query(query):
     stop_words = set(stopwords.words('english'))
     lemmatizer = WordNetLemmatizer()
     tokenizer = RegexpTokenizer(r'[a-zA-Z]{2,}')
-    title_word2vec_model = RecipeSearchConfig.title_word2vec_model
+    idf_dict = RecipeSearchConfig.idf_dict
     combined_word2vec_model = RecipeSearchConfig.combined_word2vec_model # combined word2vec
     lda_model = RecipeSearchConfig.lda_model # lda modification
     corpus_dict = RecipeSearchConfig.corpus_dict # lda modification
@@ -272,50 +263,55 @@ def vectorize_query(query):
     tokens_without_sw = [word for word in tokenized_string if not word in stop_words]
     cleaned_query = [lemmatizer.lemmatize(w) for w in tokens_without_sw]
     try:
-        test_word = title_word2vec_model[cleaned_query]
+        test_word = combined_word2vec_model[cleaned_query]
     except:
-        return None
+        return None, None
 
     if not query or not cleaned_query:
-        return None
+        return None, None
     original_cleaned_query = []
     for i in range(len(cleaned_query)):
         original_cleaned_query.append(cleaned_query[i])
         similar_word = combined_word2vec_model.wv.most_similar(positive=cleaned_query[i], topn=1)[0]
         if similar_word[1] > 0.70:
             cleaned_query.append(similar_word[0])
-
-    query_vec = (sum(combined_word2vec_model[original_cleaned_query])).reshape(1, -1) # combined word2vec
+    count = {}
+    total = 0
+    div = 0
+    for word in original_cleaned_query:
+        if word in count :
+            count[word] += 1
+        else:
+            count[word] = 1
+    for word in original_cleaned_query:
+        total += ((count[word]/len(original_cleaned_query)) * idf_dict[word]) * combined_word2vec_model[word]
+        div += idf_dict[word]
+    query_vec = (total/div).reshape(1, -1) # combined word2vec
     query_doc2bow = corpus_dict.doc2bow(cleaned_query) # lda modification
     query_topic = max(lda_model[query_doc2bow],key=itemgetter(1))[0] # lda modification
-    print(original_cleaned_query)
-    print(cleaned_query)
     return query_vec, query_topic # lda modification
 
 
 def compute_similarity(query_vec, query, query_topic=-1):
-    print('start')
     similarity_list = []
     recipe_list = RecipeSearchConfig.recipe_list
     start_time = time.time()
-    print(query_topic)
     if query == 1:
-        count = 0
         threshold = 0.65
+        similarity_list2 = []
         n = 50
         recipe_list = list(filter(lambda x:x[2] == query_topic, recipe_list))
         for recipe in recipe_list:
-            count += 1
-            # similarity = cosine_similarity(query_vec, np.array(ast.literal_eval(recipe[1]))).item()
             similarity = cosine_similarity(query_vec, recipe[1]).item() # combined word2vec
+            similarity_list.append((recipe[0], similarity))
             if similarity >= threshold:
-                similarity_list.append((recipe[0], similarity))
+                similarity_list2.append((recipe[0], similarity))
             else:
                 pass
             
-            if len(similarity_list) > n:
+            if len(similarity_list2) > n:
+                similarity_list = similarity_list2.copy()
                 break
-        print(count)
 
     elif query == 0:
         threshold = 0.75
@@ -349,22 +345,16 @@ def compute_similarity(query_vec, query, query_topic=-1):
     print('Elapsed_time: {}'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
     similarity_list = sorted(similarity_list, key=lambda x: x[1], reverse=True)
     top_n_recipes = [recipe[0] for recipe in similarity_list[0:n]]
-    print(similarity_list[0:50])
     return top_n_recipes, similarity_list[0:n]
 
 
 def find_profile_keyword(prototype_vector, username):
     profile_key = username + '_profile'
     if cache.get(profile_key) == None:
-        # ingr_word2vec_model = RecipeSearchConfig.ingr_word2vec_model
-        # print(ingr_word2vec_model.similar_by_vector(np.array(prototype_vector).reshape(-1), topn=5))
-        # keyword = ingr_word2vec_model.similar_by_vector(np.array(prototype_vector).reshape(-1), topn=1)[0][0]
-        # keyword_vec = ingr_word2vec_model[keyword].reshape(1, -1)
         top_n_recipes, similarity_list = compute_similarity(prototype_vector, 0)
 
         recipe_objects = RecipeDetails.objects.filter(index__in=top_n_recipes)
         recipe_det_serializer = RecipeDisplaySerializer(recipe_objects, context={'similarity': similarity_list}, many=True)
-        # formatted_keyword = ' '.join(keyword.split('_'))
         explanation_dict = {'explanation': "From recipes that you have rated in the past, these recipes are recommended",
                             'recipes': recipe_det_serializer.data,
                             'index': None,
@@ -400,7 +390,6 @@ def find_similar_recipes(user):
     recipe_title = highly_rated_recipe.recipe.title
     recipe_idx = highly_rated_recipe.recipe.index
     recipe_key = 'recipe_' + str(recipe_idx)
-    print(recipe_key)
     if cache.get(recipe_key) == None: 
         recipe_vec = ast.literal_eval(RecipeEmbeddings.objects.get(index=recipe_idx).combined_vec) # combined word2vec
         recipe_ingredients = ast.literal_eval(RecipeEmbeddings.objects.get(index=recipe_idx).cleaned_ingrs)
@@ -414,7 +403,6 @@ def find_similar_recipes(user):
         recipe_list = recipe_det_serializer.data
         for i in range(len(recipe_list)):
             if recipe_list[i]['index'] == recipe_idx:
-                print('they pop')
                 a = recipe_list.pop(i)
                 break
         cache.set(recipe_key, recipe_list)
@@ -456,8 +444,8 @@ def get_high_rated_recipes():
 
 
 def get_healthy_recipes():
-    print('healthy')
-    recipe_objects = RecipeDetails.objects.all()[0:1000]
+    rand_idx = random.randint(1,10000)
+    recipe_objects = RecipeDetails.objects.all()[rand_idx:rand_idx+550]
     recipe_list = RecipeDisplaySerializer(recipe_objects, context={'similarity': []}, many=True).data
     healthy_recipe = list(filter(lambda x: x['count'] == 4, recipe_list))
 

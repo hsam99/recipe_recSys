@@ -59,7 +59,6 @@ export default function SignInPage(props) {
 const alertFunc = () => {
   try{
     if(props.location.state.from.pathname == '/signup/'){
-      console.log(2, props.location.state)
       if(props.location.state.fromSignUp){
         setAlert(true)
       }
@@ -111,11 +110,9 @@ const alertFunc = () => {
     })
     .then((response) => {
       setredirectToReferrer(true);
-      console.log(2,response.data)
     }, (error) => {
       setAlert(false);
       setHelperText(error.response.data);
-      console.log(1,error.response.data);
     });
   }
 
