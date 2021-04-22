@@ -113,7 +113,6 @@ def automatic_recommendation_view(request):
 
         explanation_sections = [profile_keyword_recommendation,
                                 recipe_recipe_recommendation, 
-                                highly_rated_recipe,
                                 healthy_recipe]
         valid_explanation_sections = []
 

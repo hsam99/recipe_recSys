@@ -32,8 +32,6 @@ class RecipeSave(models.Model):
 class RecipeDetails(models.Model):
     index = models.AutoField(primary_key=True)
     title = models.TextField(blank=True, null=True)
-    url = models.TextField(blank=True, null=True)
-    partition = models.TextField(blank=True, null=True)
     ingredients = models.TextField(blank=True, null=True)
     images = models.TextField(blank=True, null=True)
     id = models.TextField(blank=True, null=True)
@@ -51,15 +49,10 @@ class RecipeEmbeddings(models.Model):
     index = models.AutoField(primary_key=True)
     cleaned_title = models.TextField(blank=True, null=True)
     cleaned_ingrs = models.TextField(blank=True, null=True)
-    title_vec = models.TextField(blank=True, null=True)
-    weighted_ingr_vec = models.TextField(blank=True, null=True)
     id = models.TextField(blank=True, null=True)
     tfidf_weight = models.TextField(blank=True, null=True)
-    weighted_title_vec = models.TextField(blank=True, null=True)
-    ingr_vec = models.TextField(blank=True, null=True)
     topic = models.IntegerField(blank=True, null=True)
     combined_vec = models.TextField(blank=True, null=True)
-    recipe_embedding = models.TextField(blank=True, null=True)
     
     class Meta:
         managed = True

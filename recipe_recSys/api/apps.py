@@ -27,6 +27,6 @@ class RecipeSearchConfig(AppConfig):
     lda_model = LdaMulticore.load(lda_model_path)
     corpus_dict = gensim.corpora.dictionary.Dictionary.load(corpus_dict_path)
     
-    recipes = RecipeEmbeddings.objects.values_list('index', 'combined_vec', 'topic')[0:200000]
+    recipes = RecipeEmbeddings.objects.values_list('index', 'combined_vec', 'topic')[0:1000]
     recipe_list = np.array([(recipe[0], np.array(ast.literal_eval(recipe[1])), recipe[2]) for recipe in recipes], dtype=object)
     print('Elapsed_time: {}'.format(time.strftime("%H:%M:%S", time.gmtime(time.time()-a))))
