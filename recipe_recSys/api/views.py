@@ -313,9 +313,9 @@ def compute_similarity(query_vec, query, query_topic=-1):
                 break
 
     elif query == 0:
-        threshold = 0.75
+        threshold = 0.65
         similarity_list2 = []
-        n = 15
+        n = 20
         if query_topic != -1:
             recipe_list = list(filter(lambda x:x[2] == query_topic, recipe_list))
             for recipe in recipe_list:
@@ -328,7 +328,7 @@ def compute_similarity(query_vec, query, query_topic=-1):
                     similarity_list = similarity_list2.copy()
                     break
         else:
-            threshold = 0.70
+            threshold = 0.65
             similarity_list2 = []
             for recipe in recipe_list[0:50000]:
                 similarity = cosine_similarity(query_vec, recipe[1]).item()

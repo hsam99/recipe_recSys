@@ -87,6 +87,7 @@ const useStyles = makeStyles((theme) => ({
     },
     rating: {
         display: 'flex',
+        alignItems: 'center'
     },
     infoSection: {
         [theme.breakpoints.up('md')]: {
@@ -143,7 +144,7 @@ const useStyles = makeStyles((theme) => ({
         padding: 15,
         paddingRight: 0,
     },
-    FSATitle: {
+    aligning: {
         display: 'flex', 
         alignItems: 'center',
         justifyContent: 'space-between'
@@ -262,6 +263,33 @@ const FSADialog = (props) => {
       )
 }
 
+const RatingInfo = (props) => {
+    const { onClose, open } = props;
+    const classes = useStyles();
+
+    const handleClose = () => {
+      onClose();
+    };
+
+    return (
+        <Dialog
+          open={open}
+          onClose={handleClose}
+          aria-labelledby="alert-dialog-title"
+          aria-describedby="alert-dialog-description"
+        >
+          <div className={classes.dialog}>
+              <DialogTitle id="alert-dialog-title">Rate recipes for the system to capture your preference.</DialogTitle>
+                  <DialogActions>
+                  <Button onClick={handleClose} color="primary" size="small">
+                      Close
+                  </Button>
+                  </DialogActions>
+          </div>
+        </Dialog>
+      )
+}
+
 const SaveButton = (props) => {
     const { save_state, recipe_idx, classes } = props;
     const [selected, setSelected] = useState(save_state);
@@ -300,6 +328,7 @@ const RecipeDetailPage = (props) => {
     const [loading, setLoading] = useState(true);
     const [open, setOpen] = useState(false);
     const [fsaOpen, setFsaOpen] = useState(false);
+    const [ratingOpen, setRatingOpen] = useState(false);
     const idx = props.match.params.idx;
     
     const handleFsaOpen = () => {
@@ -308,6 +337,14 @@ const RecipeDetailPage = (props) => {
     
     const handleFsaClose = () => {
         setFsaOpen(false);
+    };
+
+    const handleRatingOpen = () => {
+        setRatingOpen(true);
+    };
+    
+    const handleRatingClose = () => {
+        setRatingOpen(false);
     };
 
     const handleOpen = () => {
@@ -367,9 +404,10 @@ const RecipeDetailPage = (props) => {
                             <Rating name="read-only" value={detail.avg_rating} readOnly size="small" precision={0.5}/> 
                             <Box ml={2}>{detail.rating_count} {(detail.rating_count==0||detail.rating_count==1)?'rating':'ratings'}</Box>
                             <Link href='#' onClick={handleOpen}><Box ml={2}>Rate</Box></Link>
+                            <Box className={classes.aligning}><IconButton onClick={handleRatingOpen}><HelpOutlineIcon fontSize="small"/></IconButton></Box>
                         </div>
                         <Box border={2} className={classes.FSA}>
-                            <Box className={classes.FSATitle}>
+                            <Box className={classes.aligning}>
                                 <Typography variant="h6">FSA Traffic Light Info</Typography>
                                 <IconButton onClick={handleFsaOpen}>
                                     <HelpOutlineIcon fontSize="small"/>
@@ -439,6 +477,7 @@ const RecipeDetailPage = (props) => {
                 </Container>
                 <RatingDialog open={open} onClose={handleClose} recipe_idx={idx} prev_rating={detail.rating} setDetail={setDetail}/>
                 <FSADialog open={fsaOpen} onClose={handleFsaClose}/>
+                <RatingInfo open={ratingOpen} onClose={handleRatingClose}/>
             </div>
         )
     }
