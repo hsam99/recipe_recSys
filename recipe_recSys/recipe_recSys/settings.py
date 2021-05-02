@@ -79,8 +79,8 @@ WSGI_APPLICATION = 'recipe_recSys.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'recipe_db',
-        'USER': 'sam',
+        'NAME': 'test',
+        'USER': 'root',
         'PASSWORD': 'user@123',
         'HOST': 'localhost',
         'PORT': '3306',
