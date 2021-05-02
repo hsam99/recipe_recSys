@@ -450,7 +450,7 @@ def get_healthy_recipes():
 
     return({
         'explanation': 'Healthier choices', 
-        'recipes': healthy_recipe[0:15], 
+        'recipes': healthy_recipe[0:20], 
         'index': None, 
         'link': False
     })
